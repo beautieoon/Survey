@@ -1475,57 +1475,20 @@ const renderQCard=(q,num)=>{
   const responses=FREE_RESP_MOCK[q.id]||[];
   const total=TOTAL_FREE[q.id]||sub;
   const visible=showAll?responses:responses.slice(0,4);
-  const isExpanded=!!expandedQ[q.id];
-  const toggleQ=()=>setExpandedQ(p=>({...p,[q.id]:!p[q.id]}));
-
-  /* collapsed summary row */
-  const summary=()=>{
-    if(lrData){
-      const t=lrData.dist.reduce((a,b)=>a+b,0);
-      const nf=((lrData.dist[3]+lrData.dist[4])/t-(lrData.dist[0]+lrData.dist[1])/t)*100;
-      const clr=getLikertColors(lrData.dist.length);
-      return html`<div className="flex items-center gap-3 mt-2">
-        <div className="flex h-2 rounded-full overflow-hidden w-28 flex-shrink-0">
-          ${lrData.dist.map((c,i,arr)=>html`<div key=${i} style=${{width:`${c/t*100}%`,backgroundColor:clr[i]}}/>`)}
-        </div>
-        <span className="text-xs font-bold text-primary">${lrData.mean.toFixed(1)}<span className="text-muted-foreground font-normal text-[10px]">/5</span></span>
-        <span className="text-[11px] text-muted-foreground">${nf>=0?'+':''}${nf.toFixed(0)}% fav</span>
-      </div>`;
-    }
-    if(mcData){
-      const top=mcData.reduce((a,b)=>b.pct>a.pct?b:a,mcData[0]);
-      return html`<div className="flex items-center gap-2 mt-2">
-        <span className="text-[11px] text-muted-foreground truncate max-w-[160px]">${top.label}</span>
-        <span className="text-xs font-bold text-primary">${top.pct}%</span>
-      </div>`;
-    }
-    if(isFree){
-      return html`<p className="text-[11px] text-muted-foreground mt-2">${total} responses</p>`;
-    }
-    return null;
-  };
-
   return html`<div key=${q.id} ref=${el=>qRefs.current[q.id]=el} className="scroll-mt-4">
-    <${Card} className="overflow-hidden fi transition-all">
-      <!-- clickable header -->
-      <button onClick=${toggleQ} className="w-full flex items-start gap-3 px-5 py-4 hover:bg-muted/30 transition-colors text-left">
-        <span className=${cn('w-2 h-2 rounded-full flex-shrink-0 mt-1.5',qTypeDot(q.type))}/>
-        <div className="flex-1 min-w-0">
-          <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Q${num} · ${QTM[q.type]}</span>
-          <p className="text-sm font-medium leading-snug mt-0.5">${q.text}</p>
-          ${!isExpanded?summary():null}
-        </div>
-        <${I} name="chevron" size=${14} className=${cn('text-muted-foreground/50 flex-shrink-0 mt-1 transition-transform duration-200',isExpanded?'rotate-180':'')}/>
-      </button>
-      <!-- expanded content -->
-      ${isExpanded?html`<div className="px-5 pb-5 border-t border-border/60 pt-4">
+    <${Card} className="p-5 fi transition-all">
       <div className="flex-1 min-w-0 mb-4">
         <div className="flex items-center justify-between gap-3 mb-1.5">
-          ${lrData?html`<div className="flex items-center gap-4 flex-shrink-0 ml-auto">
+          <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
+            <span className=${cn('w-1.5 h-1.5 rounded-full flex-shrink-0',qTypeDot(q.type))}/>
+            ${QTM[q.type]}
+          </span>
+          ${lrData?html`<div className="flex items-center gap-4 flex-shrink-0">
             <div className="text-right"><p className="text-[10px] text-muted-foreground">Mean</p><p className="text-base font-bold text-primary">⭐ ${lrData.mean.toFixed(1)}<span className="text-xs text-muted-foreground font-normal"> /5</span></p></div>
             <div className="text-right"><p className="text-[10px] text-muted-foreground">Net Favorable</p>${(()=>{const t=lrData.dist.reduce((a,b)=>a+b,0);const nf=((lrData.dist[3]+lrData.dist[4])/t-(lrData.dist[0]+lrData.dist[1])/t)*100;return html`<p className=${cn('text-base font-bold',nf>60?'text-emerald-600':nf<-20?'text-red-600':'text-foreground')}>${nf>0?'+':''}${nf.toFixed(0)}%</p>`})()}</div>
           </div>`:null}
         </div>
+        <p className="text-sm font-medium leading-snug">${q.text}</p>
       </div>
       ${lrData?html`<div>
         <div className="flex h-9 rounded-md overflow-hidden mb-2">${lrData.dist.map((c,i,arr)=>{const w=c/arr.reduce((a,b)=>a+b,0)*100;const clr=getLikertColors(arr.length);return html`<div key=${i} className="sb-seg flex items-center justify-center text-white text-xs font-medium" style=${{width:`${w}%`,backgroundColor:clr[i],minWidth:c>0?'22px':'0'}}>${w>6?`${w.toFixed(0)}%`:''}</div>`})}</div>
@@ -1595,7 +1558,6 @@ const renderQCard=(q,num)=>{
             Show less ↑
           </button>`:null}
         </div>`:null}
-      </div>`:null}
       </div>`:null}
     </${Card}>
   </div>`;
