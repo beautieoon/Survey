@@ -620,12 +620,13 @@ return html`<div className="flex min-h-[calc(100vh)]">
     </div>
 
     <div className="flex items-center justify-between mb-3">
-      <div className="flex items-center gap-2"><h2 className="text-base font-semibold tracking-tight">Grading Queue</h2><${Bdg}>14</${Bdg}></div>
-      <${Btn} variant="link" className="text-sm px-0 cursor-default">View All</${Btn}>
+      <div className="flex items-center gap-2"><h2 className="text-base font-semibold tracking-tight">Grading Queue</h2><${Bdg} className="bg-orange-500/15 text-orange-600 border-orange-200">14 pending</${Bdg}></div>
+      <${Btn} variant="link" className="text-sm px-0" onClick=${()=>onNav('t-assign')}>View All</${Btn}>
     </div>
     <${Card} className="divide-y divide-border mb-7">
-      ${queue.map((q,i)=>html`<div key=${i} onClick=${q.onClick||null} className=${cn('px-4 py-3 flex items-center justify-between hover:bg-muted/50 transition-colors',q.onClick?'cursor-pointer':'cursor-default')}>
+      ${queue.map((q,i)=>html`<div key=${i} onClick=${()=>onNav('t-assign')} className="px-4 py-3 flex items-center justify-between hover:bg-muted/50 transition-colors cursor-pointer group">
         <div><p className="text-sm font-medium">${q.title}</p><p className="text-xs text-muted-foreground mt-0.5">${q.count}</p></div>
+        <${I} name="back" size=${13} className="rotate-180 text-muted-foreground/20 group-hover:text-primary/50 transition-colors flex-shrink-0"/>
       </div>`)}
     </${Card}>
 
@@ -659,15 +660,20 @@ return html`<div className="flex min-h-[calc(100vh)]">
         const resp=ATLAS_RESPONSES[s.id]||{};
         const ans=ATLAS_SURVEYS.reduce((a,sv)=>a+sv.questions.filter(q=>resp[q.id]!==undefined).length,0);
         const pct=Math.round(ans/Math.max(totalSv,1)*100);
+        const R=16,CIRC=2*Math.PI*R,dash=pct/100*CIRC;
         return html`<button key=${s.id} onClick=${()=>onOpenStudent&&onOpenStudent(s.id)}
           className="flex items-center gap-3 p-3 rounded-xl border border-border bg-card hover:border-primary/30 hover:shadow-sm transition-all text-left group">
-          <div className="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0" style=${{backgroundColor:s.color}}>${getInitials(s.name)}</div>
+          <div className="relative w-10 h-10 flex-shrink-0">
+            <div className="w-10 h-10 rounded-full flex items-center justify-center text-white text-[10px] font-bold" style=${{backgroundColor:s.color+'cc'}}>${getInitials(s.name)}</div>
+            <svg className="absolute inset-0" width="40" height="40" viewBox="0 0 40 40" style=${{transform:'rotate(-90deg)',pointerEvents:'none'}}>
+              <circle cx="20" cy="20" r=${R} fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="2.5"/>
+              <circle cx="20" cy="20" r=${R} fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"
+                strokeDasharray="${dash} ${CIRC}" style=${{transition:'stroke-dasharray .4s ease'}}/>
+            </svg>
+          </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium truncate">${s.name}</p>
-            <div className="flex items-center gap-1.5 mt-1">
-              <div className="flex-1 h-1 bg-muted rounded-full overflow-hidden"><div className="h-full bg-primary/60 rounded-full" style=${{width:`${pct}%`}}/></div>
-              <span className="text-[10px] text-muted-foreground flex-shrink-0">${pct}%</span>
-            </div>
+            <p className="text-[11px] text-muted-foreground mt-0.5">${pct}% complete</p>
           </div>
           <${I} name="back" size=${12} className="text-muted-foreground/40 group-hover:text-primary/60 rotate-180 flex-shrink-0 transition-colors"/>
         </button>`;
@@ -1435,6 +1441,7 @@ const[respText,setRespText]=useState('');
 const[respHtml,setRespHtml]=useState('');
 const[respSent,setRespSent]=useState(false);
 const[activeSec,setActiveSec]=useState('all');
+const[expandedQ,setExpandedQ]=useState({});
 const[expandedFree,setExpandedFree]=useState({});
 const[showAllFree,setShowAllFree]=useState({});
 const[qAiState,setQAiState]=useState({});/* per-question: undefined|'loading'|'done' */
@@ -1468,20 +1475,57 @@ const renderQCard=(q,num)=>{
   const responses=FREE_RESP_MOCK[q.id]||[];
   const total=TOTAL_FREE[q.id]||sub;
   const visible=showAll?responses:responses.slice(0,4);
+  const isExpanded=!!expandedQ[q.id];
+  const toggleQ=()=>setExpandedQ(p=>({...p,[q.id]:!p[q.id]}));
+
+  /* collapsed summary row */
+  const summary=()=>{
+    if(lrData){
+      const t=lrData.dist.reduce((a,b)=>a+b,0);
+      const nf=((lrData.dist[3]+lrData.dist[4])/t-(lrData.dist[0]+lrData.dist[1])/t)*100;
+      const clr=getLikertColors(lrData.dist.length);
+      return html`<div className="flex items-center gap-3 mt-2">
+        <div className="flex h-2 rounded-full overflow-hidden w-28 flex-shrink-0">
+          ${lrData.dist.map((c,i,arr)=>html`<div key=${i} style=${{width:`${c/t*100}%`,backgroundColor:clr[i]}}/>`)}
+        </div>
+        <span className="text-xs font-bold text-primary">${lrData.mean.toFixed(1)}<span className="text-muted-foreground font-normal text-[10px]">/5</span></span>
+        <span className="text-[11px] text-muted-foreground">${nf>=0?'+':''}${nf.toFixed(0)}% fav</span>
+      </div>`;
+    }
+    if(mcData){
+      const top=mcData.reduce((a,b)=>b.pct>a.pct?b:a,mcData[0]);
+      return html`<div className="flex items-center gap-2 mt-2">
+        <span className="text-[11px] text-muted-foreground truncate max-w-[160px]">${top.label}</span>
+        <span className="text-xs font-bold text-primary">${top.pct}%</span>
+      </div>`;
+    }
+    if(isFree){
+      return html`<p className="text-[11px] text-muted-foreground mt-2">${total} responses</p>`;
+    }
+    return null;
+  };
+
   return html`<div key=${q.id} ref=${el=>qRefs.current[q.id]=el} className="scroll-mt-4">
-    <${Card} className="p-5 fi transition-all">
+    <${Card} className="overflow-hidden fi transition-all">
+      <!-- clickable header -->
+      <button onClick=${toggleQ} className="w-full flex items-start gap-3 px-5 py-4 hover:bg-muted/30 transition-colors text-left">
+        <span className=${cn('w-2 h-2 rounded-full flex-shrink-0 mt-1.5',qTypeDot(q.type))}/>
+        <div className="flex-1 min-w-0">
+          <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Q${num} · ${QTM[q.type]}</span>
+          <p className="text-sm font-medium leading-snug mt-0.5">${q.text}</p>
+          ${!isExpanded?summary():null}
+        </div>
+        <${I} name="chevron" size=${14} className=${cn('text-muted-foreground/50 flex-shrink-0 mt-1 transition-transform duration-200',isExpanded?'rotate-180':'')}/>
+      </button>
+      <!-- expanded content -->
+      ${isExpanded?html`<div className="px-5 pb-5 border-t border-border/60 pt-4">
       <div className="flex-1 min-w-0 mb-4">
         <div className="flex items-center justify-between gap-3 mb-1.5">
-          <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
-            <span className=${cn('w-1.5 h-1.5 rounded-full flex-shrink-0',qTypeDot(q.type))}/>
-            ${QTM[q.type]}
-          </span>
-          ${lrData?html`<div className="flex items-center gap-4 flex-shrink-0">
+          ${lrData?html`<div className="flex items-center gap-4 flex-shrink-0 ml-auto">
             <div className="text-right"><p className="text-[10px] text-muted-foreground">Mean</p><p className="text-base font-bold text-primary">⭐ ${lrData.mean.toFixed(1)}<span className="text-xs text-muted-foreground font-normal"> /5</span></p></div>
             <div className="text-right"><p className="text-[10px] text-muted-foreground">Net Favorable</p>${(()=>{const t=lrData.dist.reduce((a,b)=>a+b,0);const nf=((lrData.dist[3]+lrData.dist[4])/t-(lrData.dist[0]+lrData.dist[1])/t)*100;return html`<p className=${cn('text-base font-bold',nf>60?'text-emerald-600':nf<-20?'text-red-600':'text-foreground')}>${nf>0?'+':''}${nf.toFixed(0)}%</p>`})()}</div>
           </div>`:null}
         </div>
-        <p className="text-sm font-medium leading-snug">${q.text}</p>
       </div>
       ${lrData?html`<div>
         <div className="flex h-9 rounded-md overflow-hidden mb-2">${lrData.dist.map((c,i,arr)=>{const w=c/arr.reduce((a,b)=>a+b,0)*100;const clr=getLikertColors(arr.length);return html`<div key=${i} className="sb-seg flex items-center justify-center text-white text-xs font-medium" style=${{width:`${w}%`,backgroundColor:clr[i],minWidth:c>0?'22px':'0'}}>${w>6?`${w.toFixed(0)}%`:''}</div>`})}</div>
@@ -1551,6 +1595,7 @@ const renderQCard=(q,num)=>{
             Show less ↑
           </button>`:null}
         </div>`:null}
+      </div>`:null}
       </div>`:null}
     </${Card}>
   </div>`;
@@ -2462,13 +2507,13 @@ return html`<div className="min-h-[calc(100vh)] overflow-auto bg-muted/40">
               </div>
               ${!ans?html`<p className="text-xs text-muted-foreground/40 italic pl-6">— Not answered</p>`:null}
               ${isLikert&&ans?html`<div className="pl-6">
-                <div className="flex gap-0.5 mb-1.5">
+                <div className="flex gap-1 mb-1.5">
                   ${(q.options||['Strongly Disagree','Disagree','Neutral','Agree','Strongly Agree']).map((opt,i)=>html`<div key=${i}
-                    className=${cn('flex-1 h-6 rounded flex items-center justify-center text-[9px] font-medium transition-all',opt===ans?'bg-primary text-primary-foreground':'bg-muted text-muted-foreground/40')}>
-                    ${opt===ans?opt:''}
+                    className=${cn('flex-1 h-7 rounded-md flex items-center justify-center text-[10px] font-bold transition-all',opt===ans?'bg-primary text-primary-foreground shadow-sm':'bg-muted/60 text-muted-foreground/50 border border-border')}>
+                    ${i+1}
                   </div>`)}
                 </div>
-                <p className="text-xs font-semibold text-primary">${ans}</p>
+                <p className="text-[10px] text-muted-foreground">Your answer: <span className="font-semibold text-primary">${ans}</span></p>
               </div>`:null}
               ${isMC&&ans?html`<div className="pl-6">
                 <span className="inline-flex items-center gap-1.5 text-xs font-medium bg-primary/10 text-primary px-2.5 py-1 rounded-md">
@@ -3386,8 +3431,9 @@ const anonLbl=['Identified','Anonymous'];
 const onItemClick=item=>{
   if(item.type!=='survey')return;
   const sv=STUDENT_SURVEYS.find(s=>s.id===item.surveyRef);
-  if(item.status==='in_progress'){if(sv)onTakeSurvey(sv);}
-  else if(item.status==='completed'&&sv?.instructorResponse){onNav('s-results');}
+  if(item.status==='todo'){if(sv)onTakeSurvey(sv);}
+  else if(item.status==='in_progress'){if(sv)onTakeSurvey(sv);}
+  else if(item.status==='completed'){onNav('s-results');}
 };
 const toggleCollapse=k=>setCollapsed({...collapsed,[k]:!collapsed[k]});
 const toggleShowAll=k=>setShowAllMap({...showAllMap,[k]:!showAllMap[k]});
@@ -3440,7 +3486,11 @@ const renderFull=item=>{const isSv=item.type==='survey';return html`<div key=${i
   </div>
 </div>`;};
 
-const renderSurveyCard=item=>html`<${Card} key=${item.id} className=${cn('overflow-hidden transition-all fi',item.status!=='todo'?'hover:shadow-md cursor-pointer':'cursor-default')} onClick=${()=>onItemClick(item)}>
+const renderSurveyCard=item=>{
+  const sv=()=>STUDENT_SURVEYS.find(s=>s.id===item.surveyRef);
+  const handleCard=item.status!=='expired'?()=>onItemClick(item):null;
+  const handleBtn=e=>{e.stopPropagation();onItemClick(item);};
+  return html`<${Card} key=${item.id} className=${cn('overflow-hidden transition-all fi',item.status!=='expired'?'hover:shadow-md cursor-pointer':'cursor-default')} onClick=${handleCard}>
   <div className="px-5 py-4 flex items-center gap-4">
     <!-- left: content -->
     <div className="flex-1 min-w-0">
@@ -3464,12 +3514,14 @@ const renderSurveyCard=item=>html`<${Card} key=${item.id} className=${cn('overfl
       ${item.status==='todo'?html`<${Bdg} variant="secondary" className="text-[10px]">Not Started</${Bdg}>`:null}
       ${item.status==='completed'?html`<${Bdg} variant="success" className="text-[10px]">Submitted</${Bdg}>`:null}
       ${item.status==='expired'?html`<${Bdg} variant="secondary" className="text-[10px]">Expired</${Bdg}>`:null}
-      ${item.status==='in_progress'?html`<${Btn} size="sm" className="gap-1.5">${item.progress>0?'Continue':'Start'} <${I} name="chevron" size=${12} className="-rotate-90"/></${Btn}>`:null}
-      ${item.status==='completed'?html`<${Btn} size="sm" className="gap-1.5">View Results <${I} name="chevron" size=${12} className="-rotate-90"/></${Btn}>`:null}
+      ${item.status==='todo'?html`<${Btn} size="sm" className="gap-1.5" onClick=${handleBtn}>Start <${I} name="chevron" size=${12} className="-rotate-90"/></${Btn}>`:null}
+      ${item.status==='in_progress'?html`<${Btn} size="sm" className="gap-1.5" onClick=${handleBtn}>${item.progress>0?'Continue':'Start'} <${I} name="chevron" size=${12} className="-rotate-90"/></${Btn}>`:null}
+      ${item.status==='completed'?html`<${Btn} size="sm" className="gap-1.5" onClick=${handleBtn}>View Results <${I} name="chevron" size=${12} className="-rotate-90"/></${Btn}>`:null}
       ${item.status==='expired'?html`<${Btn} variant="outline" size="sm" className="gap-1.5 text-muted-foreground pointer-events-none">Expired</${Btn}>`:null}
     </div>
   </div>
 </${Card}>`;
+};
 
 const renderItem=item=>{
   if(item.type==='course')return renderCourse(item);
@@ -3488,7 +3540,7 @@ return html`<div className="flex min-h-[calc(100vh)]">
     <h1 className="text-xl font-semibold tracking-tight mb-5">Good morning, Xiaoyue</h1>
 
     <div className="flex gap-1 mb-5 bg-muted rounded-lg p-1 w-fit">
-      ${TABS.map(t=>html`<button key=${t.k} onClick=${()=>setTab(t.k)}
+      ${TABS.map(t=>html`<button key=${t.k} onClick=${()=>{setTab(t.k);setShowAllMap({});}}
         className=${cn('px-4 py-1.5 rounded-md text-xs font-semibold transition-all',tab===t.k?'bg-background text-foreground shadow-sm':'text-muted-foreground hover:text-foreground')}>
         ${t.l} <span className="ml-1 text-[10px] opacity-60">${t.n}</span>
       </button>`)}
