@@ -404,7 +404,6 @@ const FloatingToolbar=({page,onNav,onTakeSurvey})=>{
     {id:'t-editor',label:'Editor'},
     {id:'t-assign',label:'Assignments'},
     {id:'t-results',label:'Results'},
-    {id:'t-student-atlas',label:'Atlas'},
   ];
   const studentPages=[
     {id:'s-home-v2',label:'Home'},
@@ -525,7 +524,7 @@ const FloatingToolbar=({page,onNav,onTakeSurvey})=>{
    SIDEBAR (Teacher Home)
    ══════════════════════════════════ */
 const Sidebar=({onNav,active})=>{
-const top=[{icon:'home',label:'Home',page:'t-home'},{icon:'dashboard',label:'Dashboard'},{icon:'library',label:'Library'},{icon:'create',label:'Create',ch:1},{icon:'evaluate',label:'Evaluate',ch:1},{icon:'classes',label:'Classes'},{icon:'student',label:'Student Atlas',page:'t-student-atlas'},{icon:'manage',label:'Manage',ch:1}];
+const top=[{icon:'home',label:'Home',page:'t-home'},{icon:'dashboard',label:'Dashboard'},{icon:'library',label:'Library'},{icon:'create',label:'Create',ch:1},{icon:'evaluate',label:'Evaluate',ch:1},{icon:'classes',label:'Classes'},{icon:'manage',label:'Manage',ch:1}];
 const[open,setOpen]=useState(true);
 if(!open)return html`<div className="flex-shrink-0 w-10 min-h-full bg-sidebar-bg flex flex-col items-center pt-3 transition-all duration-200">
   <div className="relative group/openbtn">
@@ -651,7 +650,7 @@ return html`<div className="flex min-h-[calc(100vh)]">
 
     <div className="flex items-center justify-between mb-3">
       <h2 className="text-base font-semibold tracking-tight">Students</h2>
-      <${Btn} variant="link" className="text-sm px-0" onClick=${()=>onNav('t-student-atlas')}>View All</${Btn}>
+      <${Btn} variant="link" className="text-sm px-0 cursor-default opacity-0">View All</${Btn}>
     </div>
     <div className="grid grid-cols-2 gap-2">
       ${ATLAS_STUDENTS.slice(0,4).map(s=>{
@@ -661,7 +660,7 @@ return html`<div className="flex min-h-[calc(100vh)]">
         const ans=ATLAS_SURVEYS.reduce((a,sv)=>a+sv.questions.filter(q=>resp[q.id]!==undefined).length,0);
         const pct=Math.round(ans/Math.max(totalSv,1)*100);
         const R=16,CIRC=2*Math.PI*R,dash=pct/100*CIRC;
-        return html`<button key=${s.id} onClick=${()=>onOpenStudent&&onOpenStudent(s.id)}
+        return html`<button key=${s.id} onClick=${null}
           className="flex items-center gap-3 p-3 rounded-xl border border-border bg-card hover:border-primary/30 hover:shadow-sm transition-all text-left group">
           <div className="relative w-10 h-10 flex-shrink-0">
             <div className="w-10 h-10 rounded-full flex items-center justify-center text-white text-[10px] font-bold" style=${{backgroundColor:s.color+'cc'}}>${getInitials(s.name)}</div>
@@ -2558,6 +2557,48 @@ return html`<div className="min-h-[calc(100vh)] overflow-auto bg-muted/40">
 /* ══════════════════════════════════
    TEACHER: CREATE SURVEY
    ══════════════════════════════════ */
+/* ── Template data for preview page ── */
+const TEMPLATES=[
+  {id:'tpl-1',label:'Midterm Course Feedback',icon:'survey',
+    desc:'Gauge student satisfaction and surface early issues at the halfway point of the semester.',
+    tags:['Mid-semester','Course'],estMin:5,anon:true,
+    sections:[
+      {name:'Course Satisfaction',questions:[MQ[0],MQ[1],MQ[2]]},
+      {name:'Teaching & Materials',questions:[MQ[3],MQ[6]]},
+      {name:'Open Feedback',questions:[MQ[4],MQ[8]]},
+    ]},
+  {id:'tpl-2',label:'End of Semester Review',icon:'survey',
+    desc:'Comprehensive end-of-term feedback to inform planning and future course improvements.',
+    tags:['End of term','Course'],estMin:7,anon:true,
+    sections:[
+      {name:'Overall Experience',questions:[MQ[0],MQ[1]]},
+      {name:'Workload & Assessment',questions:[MQ[6],MQ[3]]},
+      {name:'Suggestions',questions:[MQ[4],MQ[8]]},
+    ]},
+  {id:'tpl-3',label:'TA Evaluation',icon:'evaluate',
+    desc:'Collect anonymous feedback on Teaching Assistant performance, communication, and support quality.',
+    tags:['Staff','Evaluation'],estMin:4,anon:true,
+    sections:[
+      {name:'Communication',questions:[MQ[0],MQ[1]]},
+      {name:'Helpfulness & Support',questions:[MQ[2],MQ[6]]},
+      {name:'Additional Comments',questions:[MQ[4]]},
+    ]},
+  {id:'tpl-4',label:'Weekly Check-in',icon:'survey',
+    desc:'A quick pulse survey to track student wellbeing, understanding, and engagement week by week.',
+    tags:['Wellbeing','Recurring'],estMin:2,anon:false,
+    sections:[
+      {name:'This Week',questions:[MQ[0],MQ[3],MQ[4]]},
+    ]},
+  {id:'tpl-5',label:'Course Satisfaction Survey',icon:'survey',
+    desc:'Measure overall satisfaction with course design, delivery pace, and learning resources.',
+    tags:['Course','Satisfaction'],estMin:5,anon:true,
+    sections:[
+      {name:'Satisfaction',questions:[MQ[0],MQ[1],MQ[2]]},
+      {name:'Resources & Format',questions:[MQ[3],MQ[6]]},
+      {name:'Open Feedback',questions:[MQ[4],MQ[8]]},
+    ]},
+];
+
 const RECENT_SURVEYS=[
   {id:'rs1',surveyId:'sv-1',title:'Midterm Course Feedback',status:'active',created:'Mar 3, 2026',questions:8,responses:38,total:62,sections:2,course:'ECON 101',teacher:'Prof. Johnson',coverFrom:'#fde68a',coverTo:'#f59e0b',coverIcon:'📊'},
   {id:'rs2',surveyId:'sv-5',title:'Lab Experience Survey',status:'draft',created:'Feb 28, 2026',questions:4,responses:0,total:0,sections:2,course:'CS 201',teacher:'Prof. Chen',coverFrom:'#ddd6fe',coverTo:'#8b5cf6',coverIcon:'🔬'},
@@ -2609,7 +2650,120 @@ const TOKEN_TEMPLATES={
   },
 };
 
-const TCreate=({onNav,onOpenSurvey})=>{
+/* ══════════════════════════════════
+   TEACHER: TEMPLATE PREVIEW
+   ══════════════════════════════════ */
+const TTemplatePreview=({onNav,template})=>{
+if(!template)return html`<div/>`;
+const totalQ=template.sections.reduce((a,s)=>a+s.questions.length,0);
+const typeCount=(type)=>template.sections.flatMap(s=>s.questions).filter(q=>q.type===type).length;
+const lkCount=typeCount('likert');
+const mcCount=typeCount('mc');
+const frCount=template.sections.flatMap(s=>s.questions).filter(q=>q.type==='freeresponse'||q.type==='essay').length;
+const typeDot=(type)=>type==='likert'?'bg-violet-400':type==='mc'?'bg-blue-400':'bg-amber-400';
+const typeLabel=(type)=>QTM[type]||type;
+let qNum=0;
+return html`<div className="flex min-h-[calc(100vh)]">
+<${Sidebar} onNav=${onNav} active="t-home"/>
+<div className="flex-1 overflow-auto bg-muted/40">
+
+  <!-- sticky top bar -->
+  <div className="sticky top-0 z-10 bg-card border-b border-border px-6 py-3 flex items-center justify-between">
+    <div className="flex items-center gap-3">
+      <button onClick=${()=>onNav('t-create')} className="text-muted-foreground hover:text-foreground transition-colors">
+        <${I} name="back" size=${16}/>
+      </button>
+      <span className="text-sm font-medium text-muted-foreground">Templates</span>
+      <span className="text-muted-foreground/40 text-sm">/</span>
+      <span className="text-sm font-semibold">${template.label}</span>
+    </div>
+    <${Btn} onClick=${()=>onNav('t-editor')}>
+      Use Template <${I} name="chevron" size=${13} className="-rotate-90"/>
+    </${Btn}>
+  </div>
+
+  <div className="max-w-2xl mx-auto px-6 py-8">
+
+    <!-- header -->
+    <div className="mb-8">
+      <div className="flex items-center gap-3 mb-3">
+        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+          <${I} name=${template.icon} size=${18} className="text-primary"/>
+        </div>
+        <div>
+          <h1 className="text-xl font-bold tracking-tight">${template.label}</h1>
+          <div className="flex items-center gap-1.5 mt-0.5">
+            ${template.tags.map((t,i)=>html`<span key=${i} className="text-[10px] font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full">${t}</span>`)}
+          </div>
+        </div>
+      </div>
+      <p className="text-sm text-muted-foreground leading-relaxed">${template.desc}</p>
+    </div>
+
+    <!-- meta chips -->
+    <div className="flex flex-wrap items-center gap-3 mb-8 pb-8 border-b border-border">
+      <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-card border border-border px-3 py-1.5 rounded-full">
+        <${I} name="survey" size=${12}/> ${totalQ} questions
+      </div>
+      <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-card border border-border px-3 py-1.5 rounded-full">
+        <${I} name="clock" size=${12}/> ~${template.estMin} min
+      </div>
+      <div className="flex items-center gap-1.5 text-xs bg-card border border-border px-3 py-1.5 rounded-full ${template.anon?'text-emerald-600':'text-muted-foreground'}">
+        <${I} name=${template.anon?'shield':'student'} size=${12}/> ${template.anon?'Anonymous':'Identified'}
+      </div>
+      ${lkCount>0?html`<div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-card border border-border px-3 py-1.5 rounded-full">
+        <span className="w-2 h-2 rounded-full bg-violet-400 flex-shrink-0"/>${lkCount} Likert
+      </div>`:null}
+      ${mcCount>0?html`<div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-card border border-border px-3 py-1.5 rounded-full">
+        <span className="w-2 h-2 rounded-full bg-blue-400 flex-shrink-0"/>${mcCount} Multiple Choice
+      </div>`:null}
+      ${frCount>0?html`<div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-card border border-border px-3 py-1.5 rounded-full">
+        <span className="w-2 h-2 rounded-full bg-amber-400 flex-shrink-0"/>${frCount} Free Response
+      </div>`:null}
+    </div>
+
+    <!-- sections + questions -->
+    <div className="space-y-6">
+      ${template.sections.map((sec,si)=>html`<div key=${si}>
+        <div className="flex items-center gap-2 mb-3">
+          <span className="text-[10px] font-bold text-muted-foreground/50 uppercase tracking-widest">Section ${si+1}</span>
+          <div className="flex-1 h-px bg-border"/>
+        </div>
+        <h3 className="text-sm font-semibold mb-3">${sec.name}</h3>
+        <div className="space-y-2">
+          ${sec.questions.map(q=>{qNum++;return html`<div key=${q.id} className="flex items-start gap-3 px-4 py-3 rounded-xl bg-card border border-border">
+            <span className="text-[10px] font-bold text-muted-foreground/40 mt-0.5 w-5 flex-shrink-0 text-right">${qNum}</span>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm leading-snug">${q.text}</p>
+              <div className="flex items-center gap-1.5 mt-1.5">
+                <span className=${cn('w-1.5 h-1.5 rounded-full flex-shrink-0',typeDot(q.type))}/>
+                <span className="text-[10px] text-muted-foreground font-medium">${typeLabel(q.type)}</span>
+                ${q.type==='likert'?html`<span className="text-[10px] text-muted-foreground/50">· 1–${q.points||5} scale</span>`:null}
+                ${q.type==='mc'&&q.options?html`<span className="text-[10px] text-muted-foreground/50">· ${q.options.length} options</span>`:null}
+              </div>
+              ${q.type==='mc'&&q.options?html`<div className="flex flex-wrap gap-1.5 mt-2">
+                ${q.options.map((opt,oi)=>html`<span key=${oi} className="text-[10px] px-2 py-0.5 bg-muted rounded-full text-muted-foreground">${opt}</span>`)}
+              </div>`:null}
+            </div>
+          </div>`;})}
+        </div>
+      </div>`)}
+    </div>
+
+    <!-- bottom CTA -->
+    <div className="mt-10 pt-8 border-t border-border flex items-center justify-between">
+      <p className="text-xs text-muted-foreground">All questions can be edited, reordered, or removed in the editor.</p>
+      <${Btn} onClick=${()=>onNav('t-editor')}>
+        Use Template <${I} name="chevron" size=${13} className="-rotate-90"/>
+      </${Btn}>
+    </div>
+
+  </div>
+</div>
+</div>`;
+};
+
+const TCreate=({onNav,onOpenSurvey,onPreviewTemplate})=>{
 const[activeChip,setActiveChip]=useState(null);
 const[allTokenValues,setAllTokenValues]=useState({});
 const tokenValues=activeChip?(allTokenValues[activeChip]||{}):{};
@@ -2626,6 +2780,18 @@ const[generating,setGenerating]=useState(false);
 const[freePrompt,setFreePrompt]=useState('');
 const[promptSuffix,setPromptSuffix]=useState('');
 const[optimizing,setOptimizing]=useState(false);
+const PLACEHOLDER_EXAMPLES=[
+  'e.g. Create a 5-question mid-semester check-in for ECON 101, anonymous, with Likert and open-ended questions.',
+  'e.g. Weekly wellbeing pulse for my CS class — keep it under 3 minutes.',
+  'e.g. End-of-semester review focusing on teaching quality and workload balance.',
+  'e.g. TA evaluation survey, anonymous, covering communication and helpfulness.',
+];
+const[phIdx,setPhIdx]=useState(0);
+useEffect(()=>{
+  if(freePrompt)return;
+  const t=setInterval(()=>setPhIdx(i=>(i+1)%PLACEHOLDER_EXAMPLES.length),3200);
+  return()=>clearInterval(t);
+},[freePrompt]);
 const[uploadedFiles,setUploadedFiles]=useState([]);
 const[showUploadMenu,setShowUploadMenu]=useState(false);
 const uploadMenuRef=useRef(null);
@@ -2816,11 +2982,12 @@ return html`<div className="flex min-h-[calc(100vh)]">
           <${I} name="clip" size=${14}/>
         </button>
       </div>
-      </div>`:html`<div className="relative mb-4">
+      </div>`:html`<div className="relative mb-2">
         <${Txta}
           value=${freePrompt}
           onChange=${e=>setFreePrompt(e.target.value)}
-          placeholder="e.g. Create a 10-question survey about student satisfaction with online learning tools, focusing on usability and engagement."
+          placeholder=${PLACEHOLDER_EXAMPLES[phIdx]}
+          onKeyDown=${e=>{if((e.metaKey||e.ctrlKey)&&e.key==='Enter'&&canGenerate&&!generating){e.preventDefault();doGen();}}}
           className="w-full text-sm bg-background/80 pr-10"
         />
         <!-- clip button inside textarea bottom-right -->
@@ -2850,6 +3017,21 @@ return html`<div className="flex min-h-[calc(100vh)]">
           </button>
         </div>
       </div>`}
+
+      <!-- hint row: estimate + keyboard shortcut -->
+      <div className="flex items-center justify-between mb-3 px-0.5">
+        <span className="text-[11px] text-muted-foreground/60 transition-all">
+          ${freePrompt.trim().length>10
+            ?html`<span className="text-primary/70">✦ Will generate ~${freePrompt.match(/\d+/)?Math.min(parseInt(freePrompt.match(/\d+/)[0]),20):8} questions</span>`
+            :tpl?html`<span className="text-primary/70">✦ Will generate ~${Object.keys(tpl.tokens).length+4} questions</span>`
+            :'Start typing or pick a template below'}
+        </span>
+        <span className="text-[10px] text-muted-foreground/40 flex items-center gap-1">
+          <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border font-mono text-[9px]">⌘</kbd>
+          <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border font-mono text-[9px]">↵</kbd>
+          to generate
+        </span>
+      </div>
 
       <input ref=${fileInputRef} type="file" multiple accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg,.csv,.xlsx" className="hidden" onChange=${onFileChange}/>
 
@@ -2903,18 +3085,16 @@ return html`<div className="flex min-h-[calc(100vh)]">
       <span className="text-sm font-semibold tracking-tight">Recommended for you</span>
     </div>
     <div className="space-y-1">
-      ${[
-        {icon:'survey',label:'Midterm Course Feedback'},
-        {icon:'survey',label:'End of Semester Review'},
-        {icon:'evaluate',label:'TA Evaluation'},
-        {icon:'survey',label:'Weekly Check-in'},
-        {icon:'survey',label:'Course Satisfaction Survey'},
-      ].map((item,i)=>html`<button key=${i} onClick=${()=>onNav('t-editor')}
+      ${TEMPLATES.map((tpl,i)=>html`<button key=${i} onClick=${()=>onPreviewTemplate(tpl)}
         className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-accent transition-colors text-left group">
         <div className="w-8 h-8 rounded-md bg-muted flex items-center justify-center flex-shrink-0 group-hover:bg-background transition-colors">
-          <${I} name=${item.icon} size=${15} className="text-muted-foreground"/>
+          <${I} name=${tpl.icon} size=${15} className="text-muted-foreground"/>
         </div>
-        <span className="text-sm text-foreground">${item.label}</span>
+        <div className="flex-1 min-w-0">
+          <span className="text-sm text-foreground">${tpl.label}</span>
+        </div>
+        <span className="text-[10px] text-muted-foreground/50 flex-shrink-0 group-hover:text-muted-foreground transition-colors">${tpl.sections.reduce((a,s)=>a+s.questions.length,0)} Q</span>
+        <${I} name="back" size=${12} className="rotate-180 text-muted-foreground/20 group-hover:text-primary/50 transition-colors flex-shrink-0"/>
       </button>`)}
     </div>
     <button className="mt-2 ml-3 text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
@@ -4344,8 +4524,10 @@ const[surveyCtx,setSurveyCtx]=useState(null);
 const[resultsCtx,setResultsCtx]=useState(null);
 const[assignCtx,setAssignCtx]=useState(null);
 const[atlasCtx,setAtlasCtx]=useState(null);
+const[templateCtx,setTemplateCtx]=useState(null);
 const[instructorResp,setInstructorResp]=useState(null);
 const onNav=(p)=>{if(p==='t-assign')setAssignCtx(null);if(p==='t-student-atlas')setAtlasCtx(null);setPage(p);};
+const onPreviewTemplate=(tpl)=>{setTemplateCtx(tpl);setPage('t-template-preview');};
 const onTakeSurvey=(sv)=>{setSurveyCtx(sv);setPage('s-survey');};
 const onViewResults=(assignment,isAnon)=>{setResultsCtx(assignment);setPage(isAnon?'t-results':'t-results-id');};
 const onSendResponse=(resp)=>setInstructorResp(resp);
@@ -4358,7 +4540,8 @@ const onOpenStudent=(studentId)=>{setAtlasCtx(studentId);setPage('t-student-atla
 return html`<div className="min-h-screen">
   <${FloatingToolbar} page=${page} onNav=${onNav} onTakeSurvey=${onTakeSurvey}/>
   ${page==='t-home'?html`<${THome} onNav=${onNav} onOpenStudent=${onOpenStudent}/>`:null}
-  ${page==='t-create'?html`<${TCreate} onNav=${onNav} onOpenSurvey=${onOpenSurvey}/>`:null}
+  ${page==='t-create'?html`<${TCreate} onNav=${onNav} onOpenSurvey=${onOpenSurvey} onPreviewTemplate=${onPreviewTemplate}/>`:null}
+  ${page==='t-template-preview'?html`<${TTemplatePreview} onNav=${onNav} template=${templateCtx}/>`:null}
   ${page==='t-editor'?html`<${TEditor} onNav=${onNav}/>`:null}
   ${page==='t-assign'?html`<${TAssignments} onNav=${onNav} onViewResults=${onViewResults} initialSurvey=${assignCtx}/>`:null}
   ${page==='t-results'?html`<${TResults} onNav=${onNav} resultsCtx=${resultsCtx} onSendResponse=${onSendResponse}/>`:null}
