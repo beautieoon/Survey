@@ -326,7 +326,7 @@ const STUDENT_SURVEYS=[
     sections:[{name:'Overall',questions:[MQ[0],MQ[1],MQ[2]]},{name:'Suggestions',questions:[MQ[3],MQ[4],MQ[5]]}]},
   {id:'sv5',courseId:'c4',title:'Lab Safety & Experience Survey',status:'in_progress',due:'Mar 12, 2026',daysLeft:7,anon:1,estMin:4,
     sections:[{name:'Safety Practices',desc:'Share your experience with lab safety procedures.',questions:[MQ[0],MQ[1],MQ[2]]},{name:'Equipment & Facilities',questions:[MQ[3],MQ[4]]},{name:'Overall Experience',questions:[MQ[5],MQ[6],MQ[7]]}]},
-  {id:'sv6',courseId:'c4',title:'Instructor Feedback',status:'new',due:'Mar 20, 2026',daysLeft:15,anon:1,estMin:3,
+  {id:'sv7',courseId:'c4',title:'Instructor Feedback',status:'new',due:'Mar 20, 2026',daysLeft:15,anon:1,estMin:3,
     sections:[{name:'Teaching Quality',questions:[MQ[0],MQ[1],MQ[2]]},{name:'Communication',questions:[MQ[3],MQ[4]]}]},
 ];
 
@@ -1431,6 +1431,10 @@ const Q_AI_SUMMARY={
   },
 };
 const getLikertLabels=(q)=>{if(q.customLabels&&q.customLabels.length===(q.points||5))return q.customLabels;return PRESETS[q.preset||'agreement']['labels'+(q.points||5)];};
+/** Map stored likert answer (label string or legacy numeric index) to dot index for LikertTrack */
+const likertSelIndex=(q,ans)=>{const labels=getLikertLabels(q);if(ans===undefined||ans==='')return null;if(typeof ans==='number'&&ans>=0&&ans<labels.length)return ans;const i=labels.indexOf(ans);return i>=0?i:null;};
+const likertAnswerLabel=(q,ans)=>{const labels=getLikertLabels(q);if(ans===undefined||ans==='')return '';if(typeof ans==='number'&&ans>=0&&ans<labels.length)return labels[ans];return typeof ans==='string'?ans:String(ans);};
+const mcAnswerLabel=(q,ans)=>{if(ans===undefined||ans==='')return '';if(q.type==='mc'&&typeof ans==='number'&&q.options&&q.options[ans]!==undefined)return q.options[ans];return typeof ans==='string'?ans:String(ans);};
 
 const TResults=({onNav,resultsCtx,onSendResponse})=>{
 const[showAI,setShowAI]=useState(false);
@@ -2239,6 +2243,8 @@ ${secs.length>1?html`<div className="flex-shrink-0 bg-card border-b border-borde
     ${(()=>{
       const q=qs[activeQ];
       if(!q)return null;
+      const mcSel=answers[q.id];
+      const mcOn=q.type==='mc'?(opt)=>mcSel===opt||typeof mcSel==='number'&&q.options[mcSel]===opt:()=>false;
       const isAnswered=answers[q.id]!==undefined&&answers[q.id]!=='';
       const isReviewed=!!markedForReview[q.id];
       const sideArrow=(dir)=>{
@@ -2276,9 +2282,9 @@ ${secs.length>1?html`<div className="flex-shrink-0 bg-card border-b border-borde
                     <p className="text-sm font-medium leading-relaxed">${q.text}</p>
                   </div>
                 </div>
-                ${q.type==='likert'?html`<${LikertTrack} labels=${getLikertLabels(q)} interactive=${true} selected=${answers[q.id]} onSelect=${i=>sa(q.id,i)}/>`:null}
-                ${q.type==='mc'?html`<div className="space-y-2 pl-10">${q.options.map((opt,i)=>html`<label key=${i} className=${cn('flex items-center gap-3 px-4 py-3 rounded-lg border cursor-pointer transition-colors',answers[q.id]===i?'border-primary bg-primary/5':'border-border hover:border-input hover:bg-accent')} onClick=${()=>sa(q.id,i)}>
-                  <div className=${cn('w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0',answers[q.id]===i?'border-primary bg-primary':'border-input')}>${answers[q.id]===i?html`<div className="w-2 h-2 rounded-full bg-primary-foreground"/>`:null}</div>
+                ${q.type==='likert'?html`<${LikertTrack} labels=${getLikertLabels(q)} interactive=${true} selected=${likertSelIndex(q,answers[q.id])} onSelect=${i=>{const lbs=getLikertLabels(q);sa(q.id,lbs[i]);}}/>`:null}
+                ${q.type==='mc'?html`<div className="space-y-2 pl-10">${q.options.map((opt,i)=>html`<label key=${i} className=${cn('flex items-center gap-3 px-4 py-3 rounded-lg border cursor-pointer transition-colors',mcOn(opt)?'border-primary bg-primary/5':'border-border hover:border-input hover:bg-accent')} onClick=${()=>sa(q.id,opt)}>
+                  <div className=${cn('w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0',mcOn(opt)?'border-primary bg-primary':'border-input')}>${mcOn(opt)?html`<div className="w-2 h-2 rounded-full bg-primary-foreground"/>`:null}</div>
                   <span className="text-sm">${opt}</span>
                 </label>`)}</div>`:null}
                 ${q.type==='freeresponse'?html`<div className="pl-10"><${Txta} placeholder="Type your response here..." className="h-28 resize-none" value=${answers[q.id]||''} onChange=${e=>sa(q.id,e.target.value)}/></div>`:null}
@@ -2461,27 +2467,32 @@ return html`<div className="min-h-[calc(100vh)] overflow-auto bg-muted/40">
             const isLikert=q.type==='likert';
             const isMC=q.type==='mc';
             const isText=q.type==='freeresponse'||q.type==='essay';
+            const likertOpts=isLikert?getLikertLabels(q):[];
+            const likIdx=isLikert?likertSelIndex(q,ans):null;
+            const ansLikLbl=isLikert?likertAnswerLabel(q,ans):'';
+            const ansMcLbl=isMC?mcAnswerLabel(q,ans):'';
+            const hasAns=ans!==undefined&&ans!==null&&ans!=='';
             return html`<div key=${q.id} className="px-5 py-3.5">
               <div className="flex items-start gap-2 mb-2">
                 <span className="text-[10px] font-bold text-muted-foreground/50 mt-0.5 w-4 flex-shrink-0">${qi+1}.</span>
                 <p className="text-xs font-medium text-foreground leading-snug">${q.text}</p>
               </div>
-              ${!ans?html`<p className="text-xs text-muted-foreground/40 italic pl-6">— Not answered</p>`:null}
-              ${isLikert&&ans?html`<div className="pl-6">
+              ${!hasAns?html`<p className="text-xs text-muted-foreground/40 italic pl-6">— Not answered</p>`:null}
+              ${isLikert&&hasAns?html`<div className="pl-6">
                 <div className="flex gap-1 mb-1.5">
-                  ${(q.options||['Strongly Disagree','Disagree','Neutral','Agree','Strongly Agree']).map((opt,i)=>html`<div key=${i}
-                    className=${cn('flex-1 h-7 rounded-md flex items-center justify-center text-[10px] font-bold transition-all',opt===ans?'bg-primary text-primary-foreground shadow-sm':'bg-muted/60 text-muted-foreground/50 border border-border')}>
+                  ${likertOpts.map((opt,i)=>html`<div key=${i}
+                    className=${cn('flex-1 h-7 rounded-md flex items-center justify-center text-[10px] font-bold transition-all',likIdx===i?'bg-primary text-primary-foreground shadow-sm':'bg-muted/60 text-muted-foreground/50 border border-border')}>
                     ${i+1}
                   </div>`)}
                 </div>
-                <p className="text-[10px] text-muted-foreground">Your answer: <span className="font-semibold text-primary">${ans}</span></p>
+                <p className="text-[10px] text-muted-foreground">Your answer: <span className="font-semibold text-primary">${ansLikLbl}</span></p>
               </div>`:null}
-              ${isMC&&ans?html`<div className="pl-6">
+              ${isMC&&hasAns?html`<div className="pl-6">
                 <span className="inline-flex items-center gap-1.5 text-xs font-medium bg-primary/10 text-primary px-2.5 py-1 rounded-md">
-                  <${I} name="check" size=${11}/> ${ans}
+                  <${I} name="check" size=${11}/> ${ansMcLbl}
                 </span>
               </div>`:null}
-              ${isText&&ans?html`<div className="pl-6 bg-muted/40 rounded-lg px-3 py-2.5 border border-border/60">
+              ${isText&&hasAns?html`<div className="pl-6 bg-muted/40 rounded-lg px-3 py-2.5 border border-border/60">
                 <p className="text-xs leading-relaxed">"${ans}"</p>
               </div>`:null}
             </div>`;
@@ -2504,8 +2515,10 @@ return html`<div className="min-h-[calc(100vh)] overflow-auto bg-muted/40">
           ${canSeeClass?html`<div className="px-5 py-4 space-y-5">
             ${sv.sections.flatMap(sec=>sec.questions).filter(q=>q.type==='likert'&&MLR[q.id]).map(q=>{
               const data=MLR[q.id];const t=data.dist.reduce((a,b)=>a+b,0);const myAns=myAnswers[q.id];
-              const opts=q.options||['Strongly Disagree','Disagree','Neutral','Agree','Strongly Agree'];
-              const myIdx=myAns?opts.indexOf(myAns):-1;
+              const opts=getLikertLabels(q);
+              const li=likertSelIndex(q,myAns);
+              const myIdx=li==null?-1:li;
+              const myLikLbl=likertAnswerLabel(q,myAns);
               return html`<div key=${q.id}>
                 <p className="text-xs font-medium mb-2">${q.text}</p>
                 <div className="flex h-8 rounded-md overflow-hidden mb-1.5">
@@ -2516,14 +2529,15 @@ return html`<div className="min-h-[calc(100vh)] overflow-auto bg-muted/40">
                   </div>`;})}
                 </div>
                 <div className="flex justify-between mb-1">${opts.map((l,i,arr)=>html`<span key=${i} className=${cn('text-[9px]',i===myIdx?'text-primary font-semibold':'text-muted-foreground')} style=${{width:`${100/arr.length}%`,textAlign:'center'}}>${l}</span>`)}</div>
-                ${myIdx>=0?html`<p className="text-[10px] text-primary font-medium">▲ Your answer: ${myAns}</p>`:null}
+                ${myIdx>=0?html`<p className="text-[10px] text-primary font-medium">▲ Your answer: ${myLikLbl}</p>`:null}
               </div>`;
             })}
             ${sv.sections.flatMap(sec=>sec.questions).filter(q=>q.type==='mc'&&MMR[q.id]).map(q=>{
               const data=MMR[q.id];const myAns=myAnswers[q.id];
+              const myMc=mcAnswerLabel(q,myAns);
               return html`<div key=${q.id}>
                 <p className="text-xs font-medium mb-2">${q.text}</p>
-                <div className="space-y-1.5">${data.map((it,i)=>{const isMe=it.label===myAns;return html`<div key=${i} className="flex items-center gap-2">
+                <div className="space-y-1.5">${data.map((it,i)=>{const isMe=it.label===myMc;return html`<div key=${i} className="flex items-center gap-2">
                   <span className=${cn('text-[10px] w-32 text-right flex-shrink-0',isMe?'text-primary font-semibold':'text-muted-foreground')}>${it.label}</span>
                   <div className="flex-1 h-6 bg-muted rounded-md overflow-hidden">
                     <div className="h-full rounded-md flex items-center pl-2 text-[9px] font-medium text-white sb-seg" style=${{width:`${it.pct}%`,backgroundColor:isMe?'#7c3aed':i===1?'#a78bfa':i===2?'#c4b5fd':'#ddd6fe'}}>
