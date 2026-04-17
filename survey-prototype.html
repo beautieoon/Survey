@@ -9,7 +9,11 @@
 <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" crossorigin></script>
 <script src="https://unpkg.com/htm@3.1.1/dist/htm.umd.js"></script>
 <script>
-tailwind.config={theme:{extend:{colors:{
+tailwind.config={safelist:[
+  'from-violet-500/20','to-purple-600/10','text-violet-600','from-sky-500/20','to-blue-600/10','text-blue-600',
+  'from-emerald-500/20','to-teal-600/10','text-emerald-600','from-amber-500/20','to-orange-600/10','text-amber-700',
+  'from-rose-500/20','to-pink-600/10','text-rose-600','bg-gradient-to-br','ring-black/5',
+],theme:{extend:{colors:{
   border:'hsl(240 5.9% 90%)',input:'hsl(240 5.9% 90%)',ring:'hsl(262.1 83.3% 57.8%)',
   background:'hsl(0 0% 100%)',foreground:'hsl(240 10% 3.9%)',
   primary:{DEFAULT:'hsl(262.1 83.3% 57.8%)',foreground:'hsl(0 0% 98%)'},
@@ -2581,7 +2585,7 @@ const TEMPLATES=[
       {name:'Teaching & Materials',questions:[MQ[3],MQ[6]]},
       {name:'Open Feedback',questions:[MQ[4],MQ[8]]},
     ]},
-  {id:'tpl-2',label:'End of Semester Review',icon:'survey',
+  {id:'tpl-2',label:'End of Semester Review',icon:'book',
     desc:'Comprehensive end-of-term feedback to inform planning and future course improvements.',
     tags:['End of term','Course'],estMin:7,anon:true,
     sections:[
@@ -2597,13 +2601,13 @@ const TEMPLATES=[
       {name:'Helpfulness & Support',questions:[MQ[2],MQ[6]]},
       {name:'Additional Comments',questions:[MQ[4]]},
     ]},
-  {id:'tpl-4',label:'Weekly Check-in',icon:'survey',
+  {id:'tpl-4',label:'Weekly Check-in',icon:'clock',
     desc:'A quick pulse survey to track student wellbeing, understanding, and engagement week by week.',
     tags:['Wellbeing','Recurring'],estMin:2,anon:false,
     sections:[
       {name:'This Week',questions:[MQ[0],MQ[3],MQ[4]]},
     ]},
-  {id:'tpl-5',label:'Course Satisfaction Survey',icon:'survey',
+  {id:'tpl-5',label:'Course Satisfaction Survey',icon:'star',
     desc:'Measure overall satisfaction with course design, delivery pace, and learning resources.',
     tags:['Course','Satisfaction'],estMin:5,anon:true,
     sections:[
@@ -2611,6 +2615,14 @@ const TEMPLATES=[
       {name:'Resources & Format',questions:[MQ[3],MQ[6]]},
       {name:'Open Feedback',questions:[MQ[4],MQ[8]]},
     ]},
+];
+/* icon tile backgrounds (inline) — reliable with Tailwind CDN + no purge misses */
+const TEMPLATE_REC_STYLE=[
+  {bg:'linear-gradient(145deg,#ede9fe 0%,#ddd6fe 100%)',color:'#5b21b6'},
+  {bg:'linear-gradient(145deg,#e0f2fe 0%,#dbeafe 100%)',color:'#1d4ed8'},
+  {bg:'linear-gradient(145deg,#d1fae5 0%,#a7f3d0 100%)',color:'#047857'},
+  {bg:'linear-gradient(145deg,#ffedd5 0%,#fed7aa 100%)',color:'#c2410c'},
+  {bg:'linear-gradient(145deg,#fce7f3 0%,#fbcfe8 100%)',color:'#be185d'},
 ];
 
 const RECENT_SURVEYS=[
@@ -3032,18 +3044,13 @@ return html`<div className="flex min-h-[calc(100vh)]">
         </div>
       </div>`}
 
-      <!-- hint row: estimate + keyboard shortcut -->
-      <div className="flex items-center justify-between mb-3 px-0.5">
+      <!-- hint row: estimate -->
+      <div className="mb-3 px-0.5">
         <span className="text-[11px] text-muted-foreground/60 transition-all">
           ${freePrompt.trim().length>10
             ?html`<span className="text-primary/70">✦ Will generate ~${freePrompt.match(/\d+/)?Math.min(parseInt(freePrompt.match(/\d+/)[0]),20):8} questions</span>`
             :tpl?html`<span className="text-primary/70">✦ Will generate ~${Object.keys(tpl.tokens).length+4} questions</span>`
             :'Start typing or pick a template below'}
-        </span>
-        <span className="text-[10px] text-muted-foreground/40 flex items-center gap-1">
-          <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border font-mono text-[9px]">⌘</kbd>
-          <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border font-mono text-[9px]">↵</kbd>
-          to generate
         </span>
       </div>
 
@@ -3092,29 +3099,31 @@ return html`<div className="flex min-h-[calc(100vh)]">
     </div>
   </button>
 
-  <!-- Recommended Surveys -->
-  <div className="mb-10">
-    <div className="flex items-center gap-2 mb-4">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-muted-foreground"><path d="m17 2 4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
-      <span className="text-sm font-semibold tracking-tight">Recommended for you</span>
+  <!-- Recommended Surveys — icon tiles, one horizontal row (scroll on narrow viewports) -->
+  <${Card} className="mb-10 p-5">
+    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+      <div className="flex items-center gap-2 min-w-0">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-muted-foreground flex-shrink-0"><path d="m17 2 4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+        <span className="text-sm font-semibold tracking-tight">Recommended for you</span>
+      </div>
+      <button type="button" className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1 self-start sm:self-center flex-shrink-0">
+        Browse all templates <${I} name="chevron" size=${11} className="-rotate-90"/>
+      </button>
     </div>
-    <div className="space-y-1">
-      ${TEMPLATES.map((tpl,i)=>html`<button key=${i} onClick=${()=>onPreviewTemplate(tpl)}
-        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-accent transition-colors text-left group">
-        <div className="w-8 h-8 rounded-md bg-muted flex items-center justify-center flex-shrink-0 group-hover:bg-background transition-colors">
-          <${I} name=${tpl.icon} size=${15} className="text-muted-foreground"/>
-        </div>
-        <div className="flex-1 min-w-0">
-          <span className="text-sm text-foreground">${tpl.label}</span>
-        </div>
-        <span className="text-[10px] text-muted-foreground/50 flex-shrink-0 group-hover:text-muted-foreground transition-colors">${tpl.sections.reduce((a,s)=>a+s.questions.length,0)} Q</span>
-        <${I} name="back" size=${12} className="rotate-180 text-muted-foreground/20 group-hover:text-primary/50 transition-colors flex-shrink-0"/>
-      </button>`)}
+    <div className="mt-4 w-full min-w-0 overflow-x-auto overflow-y-visible pb-1">
+      <div className="grid grid-flow-col auto-cols-[minmax(104px,1fr)] grid-rows-1 gap-3 min-w-max sm:min-w-0 sm:grid-flow-row sm:grid-cols-5 sm:auto-cols-auto">
+        ${TEMPLATES.map((tpl,i)=>{const nQ=tpl.sections.reduce((a,s)=>a+s.questions.length,0);const tc=TEMPLATE_REC_STYLE[i%TEMPLATE_REC_STYLE.length];
+        return html`<button key=${tpl.id} type="button" onClick=${()=>onPreviewTemplate(tpl)}
+          className="group flex w-[112px] sm:w-auto flex-none flex-col items-center rounded-2xl border border-border bg-background px-2 pt-3 pb-2.5 text-center shadow-sm transition-all hover:border-primary/40 hover:bg-primary/[0.04] hover:shadow-md sm:min-w-0 sm:flex-1">
+          <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-2xl shadow-sm ring-1 ring-black/5" style=${{background:tc.bg}}>
+            <span className="flex items-center justify-center" style=${{color:tc.color}}><${I} name=${tpl.icon} size=${22}/></span>
+          </div>
+          <span className="line-clamp-2 min-h-[2.5rem] px-0.5 text-[11px] font-semibold leading-snug text-foreground">${tpl.label}</span>
+          <span className="mt-1 text-[10px] tabular-nums text-muted-foreground">${nQ} Q</span>
+        </button>`;})}
+      </div>
     </div>
-    <button className="mt-2 ml-3 text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
-      Browse all templates <${I} name="chevron" size=${11} className="-rotate-90"/>
-    </button>
-  </div>
+  </${Card}>
 
   <div className="flex items-center justify-between mb-4">
     <h2 className="text-lg font-semibold tracking-tight">Recent Surveys</h2>
