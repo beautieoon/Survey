@@ -42,11 +42,11 @@ tailwind.config={safelist:[
 #gate{position:fixed;inset:0;z-index:9999;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;transition:opacity .6s ease}
 #gate.hide{opacity:0;pointer-events:none}
 #gate canvas{position:absolute;inset:0;width:100%;height:100%}
-#gate .g-content{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:0}
+#gate .g-content{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:0;transform:translateY(-3.5vh)}
 #gate .g-lines{position:relative;width:36rem;height:9rem;pointer-events:none}
 #gate .g-title{font-size:clamp(3rem,8vw,6rem);font-weight:800;color:#fff;letter-spacing:-.04em;line-height:1;text-align:center}
 #gate .g-sub{font-size:.85rem;color:#71717a;margin-top:.75rem;letter-spacing:.06em;text-transform:uppercase}
-#gate .g-form{margin-top:2.5rem;display:flex;flex-direction:column;align-items:center;gap:.75rem}
+#gate .g-form{margin-top:.75rem;display:flex;flex-direction:column;align-items:center;gap:.75rem}
 #gate .g-input{width:14rem;padding:.65rem 1rem;border-radius:.75rem;border:1px solid #27272a;background:#0a0a0a;color:#fff;font-size:1.1rem;letter-spacing:.3em;text-align:center;outline:none;transition:border-color .2s,box-shadow .2s}
 #gate .g-input:focus{border-color:#7c3aed;box-shadow:0 0 0 3px rgba(124,58,237,.25)}
 #gate .g-input.error{border-color:#ef4444;box-shadow:0 0 0 3px rgba(239,68,68,.2);animation:shake .35s ease}
@@ -284,9 +284,9 @@ const MQ=[
 {id:3,type:'mc',text:'Which aspect of the course do you find most valuable?',options:['Lectures','Lab sessions','Group projects','Office hours'],mode:'single'},
 {id:4,type:'likert',text:'How often do you use the supplementary materials provided?',preset:'frequency',points:5},
 {id:5,type:'freeresponse',text:'What aspects of this course are working well for you?'},
-{id:6,type:'mc',text:'What is your preferred format for receiving feedback?',options:['Written comments','In-person discussion','Video feedback','Rubric-based'],mode:'single'},
+{id:6,type:'mc',text:'What formats would help you receive feedback?',options:['Written comments','In-person discussion','Video feedback','Rubric-based'],mode:'multiple'},
 {id:7,type:'likert',text:'The workload for this course is manageable.',preset:'agreement',points:5},
-{id:8,type:'essay',text:'Please provide any additional suggestions for improving this course.'},
+{id:8,type:'freeresponse',text:'Please provide any additional suggestions for improving this course.'},
 {id:9,type:'freeresponse',text:'What is one thing you would change about this course?'},
 ];
 const INIT_SECTIONS=[
@@ -305,8 +305,8 @@ const MLR={1:{dist:[3,5,12,42,38],mean:4.07,preset:'agreement',points:5},2:{dist
   20:{dist:[4,8,22,40,26],mean:3.76,preset:'agreement',points:5},21:{dist:[6,12,18,36,28],mean:3.68,preset:'agreement',points:5}};
 const MMR={3:[{label:'Lectures',pct:35},{label:'Lab sessions',pct:28},{label:'Group projects',pct:22},{label:'Office hours',pct:15}],6:[{label:'Written comments',pct:40},{label:'In-person discussion',pct:25},{label:'Video feedback',pct:20},{label:'Rubric-based',pct:15}],
   22:[{label:'< 2 hrs',pct:12},{label:'2–4 hrs',pct:38},{label:'4–6 hrs',pct:35},{label:'> 6 hrs',pct:15}]};
-const QTM={likert:'Likert Scale',mc:'Multiple Choice',freeresponse:'Free Response',essay:'Essay',blank:'Fill in the Blank'};
-const QIM={likert:'likert',mc:'mc',freeresponse:'text',essay:'essay',blank:'blank'};
+const QTM={likert:'Rating scale',mc:'Multiple choice',freeresponse:'Short answer'};
+const QIM={likert:'likert',mc:'mc',freeresponse:'text'};
 
 const COURSES=[
   {id:'c1',code:'ECON 101',name:'Principles of Economics',instructor:'Prof. Johnson',color:'#7c3aed'},
@@ -795,7 +795,7 @@ const selectQ=(qid)=>{setSel({type:'question',id:qid});setQMenu(null);setTimeout
 const selectSec=(sid)=>{setSel({type:'section',id:sid});setTimeout(()=>{const el=secRefs.current[sid];if(el)el.scrollIntoView({behavior:'smooth',block:'start'});},60);};
 
 const makeQ=(type)=>{
-  const d={likert:{type:'likert',text:'',preset:'agreement',points:5},mc:{type:'mc',text:'',options:['Option 1','Option 2','Option 3','Option 4'],mode:'single'},freeresponse:{type:'freeresponse',text:''},essay:{type:'essay',text:''},blank:{type:'blank',text:''}};
+  const d={likert:{type:'likert',text:'',preset:'agreement',points:5},mc:{type:'mc',text:'',options:['Option 1','Option 2','Option 3','Option 4'],mode:'single'},freeresponse:{type:'freeresponse',text:''}};
   const nq={id:nxId,...d[type]};setNxId(nxId+1);return nq;
 };
 const addQ=(type,targetSecId)=>{
@@ -980,7 +980,7 @@ return html`<div className="flex flex-col h-[calc(100vh)] overflow-hidden" onCli
               <${I} name="plus" size=${11}/> Add Question
             </button>
             ${showAdd===sec.id?html`<div className="absolute left-5 right-2 bottom-full mb-1 bg-popover rounded-md shadow-md border border-border py-1 z-50 fi" onClick=${e=>e.stopPropagation()}>
-              ${[{t:'likert',l:'Likert Scale',ic:'likert',hi:true},{t:'mc',l:'Multiple Choice',ic:'mc'},{t:'freeresponse',l:'Free Response',ic:'text'},{t:'essay',l:'Essay',ic:'essay'}].map(it=>html`<button key=${it.t} onClick=${()=>addQ(it.t,sec.id)} className=${cn('w-full flex items-center gap-3 px-3 py-2 text-xs hover:bg-accent transition-colors',it.hi?'text-primary font-medium':'text-foreground')}>
+              ${[{t:'likert',l:'Rating scale',ic:'likert',hi:true},{t:'mc',l:'Multiple choice',ic:'mc'},{t:'freeresponse',l:'Short answer',ic:'text'}].map(it=>html`<button key=${it.t} onClick=${()=>addQ(it.t,sec.id)} className=${cn('w-full flex items-center gap-3 px-3 py-2 text-xs hover:bg-accent transition-colors',it.hi?'text-primary font-medium':'text-foreground')}>
                 <${I} name=${it.ic} size=${14} className=${it.hi?'text-primary':'text-muted-foreground'}/>${it.l}${it.hi?html`<${Bdg} className="ml-auto">NEW</${Bdg}>`:null}
               </button>`)}
             </div>`:null}
@@ -1043,7 +1043,7 @@ return html`<div className="flex flex-col h-[calc(100vh)] overflow-hidden" onCli
               <${I} name="plus" size=${11}/> Add Question
             </button>
             ${showAdd==='top-'+sec.id?html`<div className="absolute left-0 right-0 top-full mt-1 bg-popover rounded-md shadow-md border border-border py-1 z-50 fi" onClick=${e=>e.stopPropagation()}>
-              ${[{t:'likert',l:'Likert Scale',ic:'likert',hi:true},{t:'mc',l:'Multiple Choice',ic:'mc'},{t:'freeresponse',l:'Free Response',ic:'text'},{t:'essay',l:'Essay',ic:'essay'}].map(it=>html`<button key=${it.t} onClick=${()=>insertQ(it.t,sec.id,-1)} className=${cn('w-full flex items-center gap-3 px-3 py-2 text-xs hover:bg-accent transition-colors',it.hi?'text-primary font-medium':'')}>
+              ${[{t:'likert',l:'Rating scale',ic:'likert',hi:true},{t:'mc',l:'Multiple choice',ic:'mc'},{t:'freeresponse',l:'Short answer',ic:'text'}].map(it=>html`<button key=${it.t} onClick=${()=>insertQ(it.t,sec.id,-1)} className=${cn('w-full flex items-center gap-3 px-3 py-2 text-xs hover:bg-accent transition-colors',it.hi?'text-primary font-medium':'')}>
                 <${I} name=${it.ic} size=${14} className=${it.hi?'text-primary':'text-muted-foreground'}/>${it.l}${it.hi?html`<${Bdg} className="ml-auto">NEW</${Bdg}>`:null}
               </button>`)}
             </div>`:null}
@@ -1082,15 +1082,11 @@ return html`<div className="flex flex-col h-[calc(100vh)] overflow-hidden" onCli
                 </div>
                 <div className="p-6">
                   ${q.type==='likert'?html`<${LikertEditor} question=${q} onChange=${(u)=>updateQ(q.id,u)}/>`:null}
-                  ${q.type==='mc'?html`<${MCEditor} question=${q}/>`:null}
-                  ${q.type==='freeresponse'||q.type==='essay'?html`<div>
+                  ${q.type==='mc'?html`<${MCEditor} question=${q} onChange=${(u)=>updateQ(q.id,u)}/>`:null}
+                  ${q.type==='freeresponse'?html`<div>
                     <label className="text-xs font-medium text-muted-foreground mb-2 block">QUESTION PROMPT</label>
                     <${Txta} defaultValue=${q.text} placeholder="Enter your question..." className="h-24 resize-none" onBlur=${e=>updateQ(q.id,{text:e.target.value})}/>
-                    <div className="mt-4 p-4 bg-muted/50 rounded-lg border border-dashed border-border"><p className="text-sm text-muted-foreground italic">${q.type==='essay'?'Students will see a rich text editor here':'Students will see a text input field here'}</p></div>
-                  </div>`:null}
-                  ${q.type==='blank'?html`<div>
-                    <label className="text-xs font-medium text-muted-foreground mb-2 block">QUESTION WITH BLANK</label>
-                    <${Txta} defaultValue=${q.text} placeholder="Type your question. Use ___ for blanks" className="h-24 resize-none" onBlur=${e=>updateQ(q.id,{text:e.target.value})}/>
+                    <div className="mt-4 p-4 bg-muted/50 rounded-lg border border-dashed border-border"><p className="text-sm text-muted-foreground italic">Students will see a text input field here</p></div>
                   </div>`:null}
                 </div>
               </div>
@@ -1099,7 +1095,7 @@ return html`<div className="flex flex-col h-[calc(100vh)] overflow-hidden" onCli
                   <${I} name="plus" size=${11}/> Add Question
                 </button>
                 ${showAdd==='after-'+q.id?html`<div className="absolute left-0 right-0 top-full mt-1 bg-popover rounded-md shadow-md border border-border py-1 z-50 fi" onClick=${e=>e.stopPropagation()}>
-                  ${[{t:'likert',l:'Likert Scale',ic:'likert',hi:true},{t:'mc',l:'Multiple Choice',ic:'mc'},{t:'freeresponse',l:'Free Response',ic:'text'},{t:'essay',l:'Essay',ic:'essay'}].map(it=>html`<button key=${it.t} onClick=${()=>insertQ(it.t,sec.id,qi)} className=${cn('w-full flex items-center gap-3 px-3 py-2 text-xs hover:bg-accent transition-colors',it.hi?'text-primary font-medium':'')}>
+                  ${[{t:'likert',l:'Rating scale',ic:'likert',hi:true},{t:'mc',l:'Multiple choice',ic:'mc'},{t:'freeresponse',l:'Short answer',ic:'text'}].map(it=>html`<button key=${it.t} onClick=${()=>insertQ(it.t,sec.id,qi)} className=${cn('w-full flex items-center gap-3 px-3 py-2 text-xs hover:bg-accent transition-colors',it.hi?'text-primary font-medium':'')}>
                     <${I} name=${it.ic} size=${14} className=${it.hi?'text-primary':'text-muted-foreground'}/>${it.l}${it.hi?html`<${Bdg} className="ml-auto">NEW</${Bdg}>`:null}
                   </button>`)}
                 </div>`:null}
@@ -1187,16 +1183,16 @@ return html`<div>
 };
 
 /* ── MC Editor ── */
-const MCEditor=({question})=>html`<div>
+const MCEditor=({question,onChange})=>html`<div>
   <div className="flex gap-2 mb-4">
-    <${Btn} variant=${question.mode==='single'?'secondary':'ghost'} size="sm" className=${question.mode==='single'?'bg-primary/10 text-primary hover:bg-primary/15':''}>Single Answer</${Btn}>
-    <${Btn} variant=${question.mode!=='single'?'secondary':'ghost'} size="sm" className=${question.mode!=='single'?'bg-primary/10 text-primary hover:bg-primary/15':''}>Multiple Answers</${Btn}>
+    <${Btn} variant=${question.mode==='single'?'secondary':'ghost'} size="sm" onClick=${()=>onChange&&onChange({mode:'single'})} className=${question.mode==='single'?'bg-primary/10 text-primary hover:bg-primary/15':''}>Single Answer</${Btn}>
+    <${Btn} variant=${question.mode==='multiple'?'secondary':'ghost'} size="sm" onClick=${()=>onChange&&onChange({mode:'multiple'})} className=${question.mode==='multiple'?'bg-primary/10 text-primary hover:bg-primary/15':''}>Multiple Answers</${Btn}>
   </div>
   <label className="text-xs font-medium text-muted-foreground mb-2 block">QUESTION</label>
   <${Txta} defaultValue=${question.text} placeholder="Enter your question..." className="h-20 resize-none mb-4"/>
   <label className="text-xs font-medium text-muted-foreground mb-2 block">OPTIONS</label>
   <div className="space-y-2">
-    ${(question.options||[]).map((opt,i)=>html`<div key=${i} className="flex items-center gap-3"><div className="w-5 h-5 rounded-full border-2 border-input"/><${Inp} type="text" defaultValue=${opt}/></div>`)}
+    ${(question.options||[]).map((opt,i)=>html`<div key=${i} className="flex items-center gap-3"><div className=${cn('w-5 h-5 border-2 border-input',question.mode==='multiple'?'rounded':'rounded-full')}/><${Inp} type="text" defaultValue=${opt}/></div>`)}
     <${Btn} variant="ghost" size="sm" className="text-primary mt-2 ml-8"><${I} name="plus" size=${14}/> Add Option</${Btn}>
   </div>
 </div>`;
@@ -1438,7 +1434,7 @@ const getLikertLabels=(q)=>{if(q.customLabels&&q.customLabels.length===(q.points
 /** Map stored likert answer (label string or legacy numeric index) to dot index for LikertTrack */
 const likertSelIndex=(q,ans)=>{const labels=getLikertLabels(q);if(ans===undefined||ans==='')return null;if(typeof ans==='number'&&ans>=0&&ans<labels.length)return ans;const i=labels.indexOf(ans);return i>=0?i:null;};
 const likertAnswerLabel=(q,ans)=>{const labels=getLikertLabels(q);if(ans===undefined||ans==='')return '';if(typeof ans==='number'&&ans>=0&&ans<labels.length)return labels[ans];return typeof ans==='string'?ans:String(ans);};
-const mcAnswerLabel=(q,ans)=>{if(ans===undefined||ans==='')return '';if(q.type==='mc'&&typeof ans==='number'&&q.options&&q.options[ans]!==undefined)return q.options[ans];return typeof ans==='string'?ans:String(ans);};
+const mcAnswerLabel=(q,ans)=>{if(ans===undefined||ans==='')return '';if(Array.isArray(ans))return ans.join(', ');if(q.type==='mc'&&typeof ans==='number'&&q.options&&q.options[ans]!==undefined)return q.options[ans];return typeof ans==='string'?ans:String(ans);};
 
 const TResults=({onNav,resultsCtx,onSendResponse})=>{
 const[showAI,setShowAI]=useState(false);
@@ -1476,7 +1472,7 @@ const qTypeDot=(type)=>type==='likert'?'bg-violet-400':type==='mc'?'bg-blue-400'
 const renderQCard=(q,num)=>{
   const lrData=MLR[q.id];
   const mcData=MMR[q.id];
-  const isFree=q.type==='freeresponse'||q.type==='essay';
+  const isFree=q.type==='freeresponse';
   const isOpen=expandedFree[q.id];
   const showAll=showAllFree[q.id];
   const responses=FREE_RESP_MOCK[q.id]||[];
@@ -1720,12 +1716,18 @@ const ID_RESPONSES={
 };
 const ID_QUESTIONS=MQ;
 
-const TResultsId=({onNav,resultsCtx})=>{
+const TResultsId=({onNav,resultsCtx,onSendResponse})=>{
 const[expanded,setExpanded]=useState({});
 const[viewMode,setViewMode]=useState('student');
 const[idQAiState,setIdQAiState]=useState({});
+const[showAI,setShowAI]=useState(false);
+const[aiLoad,setAiLoad]=useState(false);
+const[respText,setRespText]=useState('');
+const[respHtml,setRespHtml]=useState('');
+const[respSent,setRespSent]=useState(false);
 const tot=resultsCtx?.students??35;
 const sub=resultsCtx?.responses??12;
+const doAI=()=>{setAiLoad(true);setTimeout(()=>{setAiLoad(false);setShowAI(true);},1500);};
 
 const toggleRow=(id)=>setExpanded(p=>({...p,[id]:!p[id]}));
 
@@ -1778,6 +1780,53 @@ return html`<div className="flex h-screen overflow-hidden">
         </div>
       </${Card}>
     </div>
+
+    <!-- respond to students -->
+    <${Card} className="mb-6 overflow-hidden fi">
+      <${CardH} className="flex-row items-center justify-between space-y-0 border-b border-border">
+        <div className="flex items-center gap-2.5"><${I} name="edit" size=${15} className="text-primary"/><h3 className="text-sm font-semibold">Respond to Students</h3></div>
+        <span className="text-[10px] text-muted-foreground">Close the feedback loop with a personalized message</span>
+      </${CardH}>
+      ${!respSent?html`<${CardC} className="pt-4 space-y-3">
+        <${RichTextEditor}
+          placeholder="Thank your students for participating, share what you learned, and describe any actions you plan to take based on their feedback..."
+          onTextChange=${t=>setRespText(t)}
+          onHtmlChange=${h=>setRespHtml(h)}/>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2"><${I} name="shield" size=${13} className="text-blue-500"/><span className="text-[11px] text-muted-foreground">Students will see this as "Instructor Response" — sent to all responders</span></div>
+          <${Btn} size="sm" onClick=${()=>{setRespSent(true);onSendResponse&&onSendResponse({msg:respText,date:'Mar 6, 2026'});}} disabled=${!respText.trim()}>Send to Students <${I} name="chevron" size=${12} className="-rotate-90"/></${Btn}>
+        </div>
+      </${CardC}>`:html`<${CardC} className="pt-4 fi">
+        <div className="flex items-start gap-3">
+          <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center flex-shrink-0"><${I} name="check" size=${16} className="text-emerald-600"/></div>
+          <div className="flex-1"><p className="text-sm font-medium mb-1">Response sent to students</p>
+            <div className="bg-muted rounded-md px-4 py-3 text-sm text-muted-foreground border border-border leading-relaxed [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_a]:text-primary [&_a]:underline" dangerouslySetInnerHTML=${{__html:respHtml||respText}}/>
+            <${Btn} variant="link" size="sm" className="mt-2 h-auto p-0 text-xs" onClick=${()=>setRespSent(false)}>Edit Response</${Btn}>
+          </div>
+        </div>
+      </${CardC}>`}
+    </${Card}>
+
+    <!-- AI summary card: hidden when 0 responses -->
+    ${sub>0?html`<${Card} className="p-5 mb-6 fi">
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex items-start gap-2"><${I} name="sparkle" size=${16} className="text-primary mt-0.5"/><p className="text-sm font-medium">AI Summary</p></div>
+        <span className="text-xs text-muted-foreground">${sub} responses</span>
+      </div>
+      ${!showAI?html`<div className="relative inline-block">
+        <${Btn} onClick=${sub>=5?doAI:undefined} disabled=${aiLoad||sub<5} className=${cn('bg-gradient-to-r from-primary to-purple-500 hover:shadow-lg',sub<5&&'opacity-50 cursor-not-allowed grayscale')}>
+          ${aiLoad?html`<span className="animate-spin inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full"/> Generating...`:html`<${I} name="sparkle" size=${16}/> Generate AI Summary`}
+        </${Btn}>
+        ${sub<5?html`<p className="mt-2 text-xs text-muted-foreground">At least 5 responses are needed to generate a summary. <span className="font-medium">(${sub} so far)</span></p>`:null}
+      </div>`:null}
+      ${showAI?html`<div className="mt-1 space-y-3 fi">
+        <div className="grid grid-cols-1 gap-3">
+          <div className="px-4 py-3 rounded-lg bg-emerald-500/5 border border-emerald-500/10"><p className="text-xs font-bold text-emerald-700 mb-2">👍 What went well</p><ul className="text-sm text-emerald-800 space-y-1.5"><li>• <strong>Engaged students</strong> — most responders report confidence in current topic.</li><li>• <strong>TA support</strong> — TA office hours mentioned as helpful by multiple students.</li></ul></div>
+          <div className="px-4 py-3 rounded-lg bg-red-500/5 border border-red-500/10"><p className="text-xs font-bold text-red-700 mb-2">👎 Areas for improvement</p><ul className="text-sm text-red-800 space-y-1.5"><li>• <strong>Workload</strong> — several students flag heavy workload this week.</li><li>• <strong>Pacing</strong> — pacing perceived as uneven, especially in regression unit.</li></ul></div>
+          <div className="px-4 py-3 rounded-lg bg-blue-500/5 border border-blue-500/10"><p className="text-xs font-bold text-blue-700 mb-2">💡 Key suggestions</p><ul className="text-sm text-blue-800 space-y-1.5"><li>• Follow up individually with students reporting low confidence</li><li>• Consider a checkpoint review before next assessment</li></ul></div>
+        </div>
+      </div>`:null}
+    </${Card}>`:null}
 
     <!-- view toggle -->
     <div className="flex items-center gap-2 mb-5">
@@ -1848,7 +1897,7 @@ return html`<div className="flex h-screen overflow-hidden">
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">${QTM[q.type]}</p>
               <p className="text-sm font-medium leading-snug">${q.text}</p>
             </div>
-            ${q.type==='freeresponse'||q.type==='essay'?html`
+            ${q.type==='freeresponse'?html`
               <div className="space-y-3">
                 <!-- AI Summary for identified free response -->
                 <div className="rounded-lg border border-border bg-muted/30 px-4 py-3">
@@ -1981,7 +2030,7 @@ return html`<div className="min-h-[calc(100vh)] overflow-auto bg-muted/40">
         <div className="flex items-center gap-4 text-xs text-muted-foreground">
           <span className="flex items-center gap-1"><${I} name="shield" size=${12} className="text-emerald-500"/>${anonLabels[sv.anon]}</span>
           <span>~${sv.estMin} min</span>
-          ${sv.status!=='expired'?html`<span className=${sv.daysLeft<=3&&sv.daysLeft>0?'text-orange-500 font-medium':''}>${sv.status==='completed'?'Submitted '+sv.due:'Due '+sv.due}${sv.status!=='completed'&&sv.daysLeft>0?' · '+sv.daysLeft+' days left':''}</span>`:html`<span>Archived ${sv.due}</span>`}
+          ${sv.status!=='expired'?html`<span className=${sv.daysLeft<=3&&sv.daysLeft>0?'text-orange-500 font-medium':''}>${sv.status==='completed'?'Submitted '+sv.due:'Due '+sv.due}${sv.status!=='completed'&&sv.daysLeft>0?' · '+sv.daysLeft+' days left':''}</span>`:html`<span>Expired ${sv.due}</span>`}
         </div>
       </div>
       ${sv.status==='completed'&&sv.instructorResponse?html`<div className="mx-5 mb-4 bg-primary/5 border border-primary/15 rounded-lg p-3 flex items-start gap-2.5">
@@ -2112,6 +2161,7 @@ const sv=surveyCtx||STUDENT_SURVEYS[0];
 const course=COURSES.find(c=>c.id===sv.courseId);
 const secs=sv.sections||[{name:'All Questions',questions:MQ}];
 const totalQ=secs.reduce((s,sec)=>s+sec.questions.length,0);
+const[started,setStarted]=useState(false);
 const[curSec,setCurSec]=useState(0);
 const[answers,setAnswers]=useState({});
 const[submitted,setSubmitted]=useState(false);
@@ -2151,6 +2201,68 @@ const goNextQ=()=>{
   else if(curSec<secs.length-1){setCurSec(curSec+1);setActiveQ(0);}
 };
 
+if(!started)return html`<div className="min-h-[calc(100vh)] bg-muted/40">
+  <div className="bg-card border-b border-border px-6 py-3 flex items-center">
+    <button onClick=${()=>onNav('s-home-v2')} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors font-medium">
+      <${I} name="back" size=${13}/> Back to Home
+    </button>
+  </div>
+  <div className="max-w-xl mx-auto px-6 py-10 fi">
+    <div className="flex items-center gap-2 mb-3 text-xs font-semibold text-muted-foreground">
+      <span className="w-2 h-2 rounded-full" style=${{backgroundColor:course.color}}/>
+      <span>${course.code}</span>
+      <span className="text-muted-foreground/50">·</span>
+      <span>${course.instructor}</span>
+    </div>
+    <h1 className="text-2xl font-bold tracking-tight mb-2">${sv.title}</h1>
+    <p className="text-sm text-muted-foreground mb-6">Your teacher would like to hear from you. Your feedback helps shape this course.</p>
+
+    <${Card} className="p-5 mb-5 space-y-3">
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-muted-foreground flex items-center gap-1.5"><${I} name="survey" size=${13}/> Questions</span>
+        <span className="text-sm font-semibold">${totalQ}</span>
+      </div>
+      <${Sep}/>
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-muted-foreground flex items-center gap-1.5"><${I} name="clock" size=${13}/> Estimated time</span>
+        <span className="text-sm font-semibold">~${sv.estMin} min</span>
+      </div>
+      <${Sep}/>
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-muted-foreground flex items-center gap-1.5"><${I} name="bell" size=${13}/> Due</span>
+        <span className="text-sm font-semibold">${sv.due}</span>
+      </div>
+    </${Card}>
+
+    ${sv.anon===1?html`<div className="rounded-lg bg-emerald-500/5 border border-emerald-500/20 px-4 py-3 mb-5 flex items-start gap-2.5">
+      <${I} name="shield" size=${15} className="text-emerald-600 mt-0.5 flex-shrink-0"/>
+      <div>
+        <p className="text-sm font-semibold text-emerald-800 mb-0.5">This survey is anonymous</p>
+        <p className="text-xs text-emerald-700 leading-relaxed">Your teacher will see class-level results, not your individual response. You can answer honestly without worrying about your identity.</p>
+      </div>
+    </div>`:html`<div className="rounded-lg bg-blue-500/5 border border-blue-500/20 px-4 py-3 mb-5 flex items-start gap-2.5">
+      <${I} name="student" size=${15} className="text-blue-600 mt-0.5 flex-shrink-0"/>
+      <div>
+        <p className="text-sm font-semibold text-blue-800 mb-0.5">This survey is identified</p>
+        <p className="text-xs text-blue-700 leading-relaxed">Your teacher may see your individual response next to your name.</p>
+      </div>
+    </div>`}
+
+    <div className="rounded-lg bg-muted/40 border border-border px-4 py-3 mb-6 flex items-start gap-2.5">
+      <${I} name="bell" size=${14} className="text-muted-foreground mt-0.5 flex-shrink-0"/>
+      <div>
+        <p className="text-xs font-semibold mb-0.5">You can skip questions</p>
+        <p className="text-[11px] text-muted-foreground leading-relaxed">Surveys are not graded. You can skip any question you do not want to answer and still submit.</p>
+      </div>
+    </div>
+
+    <div className="flex items-center justify-between">
+      <${Btn} variant="outline" onClick=${()=>onNav('s-home-v2')}>Cancel</${Btn}>
+      <${Btn} onClick=${()=>setStarted(true)}>${sv.status==='in_progress'?'Continue':'Start Survey'} <${I} name="chevron" size=${12} className="-rotate-90"/></${Btn}>
+    </div>
+  </div>
+</div>`;
+
 if(submitted)return html`<div className="min-h-[calc(100vh)] flex items-center justify-center bg-muted/40"><div className="max-w-md w-full mx-4 fi">
   <div className="text-center mb-6">
     <div className="w-20 h-20 rounded-full bg-emerald-500/10 flex items-center justify-center mx-auto mb-4"><${I} name="check" size=${36} className="text-emerald-600"/></div>
@@ -2160,7 +2272,7 @@ if(submitted)return html`<div className="min-h-[calc(100vh)] flex items-center j
   <${Card} className="p-5 mb-4 space-y-3">
     <div className="flex items-center justify-between py-1.5"><span className="text-xs text-muted-foreground flex items-center gap-1.5"><${I} name="survey" size=${13}/> Questions answered</span><span className="text-sm font-semibold">${totalAnswered} / ${totalQ}</span></div>
     <${Sep}/>
-    <div className="flex items-center justify-between py-1.5"><span className="text-xs text-muted-foreground flex items-center gap-1.5"><${I} name="clock" size=${13}/> Sections completed</span><span className="text-sm font-semibold">${secs.length} / ${secs.length}</span></div>
+    <div className="flex items-center justify-between py-1.5"><span className="text-xs text-muted-foreground flex items-center gap-1.5"><${I} name="clock" size=${13}/> Skipped</span><span className="text-sm font-semibold">${totalQ-totalAnswered}</span></div>
     <${Sep}/>
     <div className="flex items-center justify-between py-1.5"><span className="text-xs text-muted-foreground flex items-center gap-1.5"><${I} name="shield" size=${13} className="text-emerald-500"/>Anonymous</span><span className="text-sm font-semibold text-emerald-600"><${I} name="check" size=${14}/></span></div>
   </${Card}>
@@ -2222,7 +2334,7 @@ ${secs.length>1?html`<div className="flex-shrink-0 bg-card border-b border-borde
       })}
     </div>
   </div>
-</div>`:null}
+</aside>`:null}
 
 <!-- ── Single question view with side arrows ── -->
 <div className="flex-1 overflow-y-auto flex flex-col">
@@ -2248,7 +2360,9 @@ ${secs.length>1?html`<div className="flex-shrink-0 bg-card border-b border-borde
       const q=qs[activeQ];
       if(!q)return null;
       const mcSel=answers[q.id];
-      const mcOn=q.type==='mc'?(opt)=>mcSel===opt||typeof mcSel==='number'&&q.options[mcSel]===opt:()=>false;
+      const isMultiChoice=q.type==='mc'&&q.mode==='multiple';
+      const mcOn=q.type==='mc'?(opt)=>Array.isArray(mcSel)?mcSel.includes(opt):mcSel===opt||typeof mcSel==='number'&&q.options[mcSel]===opt:()=>false;
+      const toggleMc=(opt)=>{if(!isMultiChoice){sa(q.id,opt);return;}const cur=Array.isArray(mcSel)?mcSel:[];sa(q.id,cur.includes(opt)?cur.filter(x=>x!==opt):[...cur,opt]);};
       const isAnswered=answers[q.id]!==undefined&&answers[q.id]!=='';
       const isReviewed=!!markedForReview[q.id];
       const sideArrow=(dir)=>{
@@ -2287,12 +2401,11 @@ ${secs.length>1?html`<div className="flex-shrink-0 bg-card border-b border-borde
                   </div>
                 </div>
                 ${q.type==='likert'?html`<${LikertTrack} labels=${getLikertLabels(q)} interactive=${true} selected=${likertSelIndex(q,answers[q.id])} onSelect=${i=>{const lbs=getLikertLabels(q);sa(q.id,lbs[i]);}}/>`:null}
-                ${q.type==='mc'?html`<div className="space-y-2 pl-10">${q.options.map((opt,i)=>html`<label key=${i} className=${cn('flex items-center gap-3 px-4 py-3 rounded-lg border cursor-pointer transition-colors',mcOn(opt)?'border-primary bg-primary/5':'border-border hover:border-input hover:bg-accent')} onClick=${()=>sa(q.id,opt)}>
-                  <div className=${cn('w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0',mcOn(opt)?'border-primary bg-primary':'border-input')}>${mcOn(opt)?html`<div className="w-2 h-2 rounded-full bg-primary-foreground"/>`:null}</div>
+                ${q.type==='mc'?html`<div className="space-y-2 pl-10">${q.options.map((opt,i)=>html`<label key=${i} className=${cn('flex items-center gap-3 px-4 py-3 rounded-lg border cursor-pointer transition-colors',mcOn(opt)?'border-primary bg-primary/5':'border-border hover:border-input hover:bg-accent')} onClick=${()=>toggleMc(opt)}>
+                  <div className=${cn('w-5 h-5 border-2 flex items-center justify-center flex-shrink-0',isMultiChoice?'rounded':'rounded-full',mcOn(opt)?'border-primary bg-primary':'border-input')}>${mcOn(opt)?html`<div className=${cn('bg-primary-foreground',isMultiChoice?'w-2.5 h-2.5 rounded-sm':'w-2 h-2 rounded-full')}/>`:null}</div>
                   <span className="text-sm">${opt}</span>
                 </label>`)}</div>`:null}
                 ${q.type==='freeresponse'?html`<div className="pl-10"><${Txta} placeholder="Type your response here..." className="h-28 resize-none" value=${answers[q.id]||''} onChange=${e=>sa(q.id,e.target.value)}/></div>`:null}
-                ${q.type==='essay'?html`<div className="pl-10"><${Txta} placeholder="Write your detailed response here..." className="h-36 resize-none" value=${answers[q.id]||''} onChange=${e=>sa(q.id,e.target.value)}/></div>`:null}
               </div>
             </${Card}>
           </div>
@@ -2378,14 +2491,14 @@ ${showConfirm?html`<${DlgOverlay} onClose=${()=>setShowConfirm(false)}>
     <div className="px-6 py-5">
       <div className="flex items-center gap-3 mb-3">
         <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center flex-shrink-0"><${I} name="bell" size=${20} className="text-amber-600"/></div>
-        <h3 className="text-base font-semibold">Unanswered Questions</h3>
+        <h3 className="text-base font-semibold">Skip ${unanswered} question${unanswered>1?'s':''}?</h3>
       </div>
-      <p className="text-sm mb-1">You have <strong>${unanswered}</strong> unanswered question${unanswered>1?'s':''}.</p>
-      <p className="text-xs text-muted-foreground">You can still submit, but your feedback will be more helpful if all questions are answered.</p>
+      <p className="text-sm mb-1">You're about to submit with <strong>${unanswered}</strong> unanswered question${unanswered>1?'s':''}.</p>
+      <p className="text-xs text-muted-foreground">Surveys are not graded, so this is OK. Your feedback is more helpful when all questions are answered.</p>
     </div>
     <${DlgFooter} className="justify-end gap-2">
       <${Btn} variant="outline" onClick=${()=>setShowConfirm(false)}>Go Back</${Btn}>
-      <${Btn} onClick=${()=>{setShowConfirm(false);setSubmitted(true);}}>Submit Anyway</${Btn}>
+      <${Btn} onClick=${()=>{setShowConfirm(false);setSubmitted(true);}}>Skip & Submit</${Btn}>
     </${DlgFooter}>
   </${DlgContent}>
 </${DlgOverlay}>`:null}
@@ -2470,7 +2583,7 @@ return html`<div className="min-h-[calc(100vh)] overflow-auto bg-muted/40">
             const ans=myAnswers[q.id];
             const isLikert=q.type==='likert';
             const isMC=q.type==='mc';
-            const isText=q.type==='freeresponse'||q.type==='essay';
+            const isText=q.type==='freeresponse';
             const likertOpts=isLikert?getLikertLabels(q):[];
             const likIdx=isLikert?likertSelIndex(q,ans):null;
             const ansLikLbl=isLikert?likertAnswerLabel(q,ans):'';
@@ -2504,68 +2617,13 @@ return html`<div className="min-h-[calc(100vh)] overflow-auto bg-muted/40">
         </div>
       </${Card}>
 
-      <!-- Class Results -->
-      ${sv.resultsVisible?html`
-        <${Card} className="overflow-hidden">
-          <div className="px-5 py-4 border-b border-border flex items-center justify-between">
-            <div>
-              <p className="text-sm font-semibold">Class Results</p>
-              <p className="text-xs text-muted-foreground mt-0.5">${sv.responses} students responded · Anonymous aggregates only</p>
-            </div>
-            <span className="text-[10px] flex items-center gap-1 text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-1 rounded-full font-semibold">
-              <${I} name="shield" size=${10}/> Anonymous
-            </span>
-          </div>
-          ${canSeeClass?html`<div className="px-5 py-4 space-y-5">
-            ${sv.sections.flatMap(sec=>sec.questions).filter(q=>q.type==='likert'&&MLR[q.id]).map(q=>{
-              const data=MLR[q.id];const t=data.dist.reduce((a,b)=>a+b,0);const myAns=myAnswers[q.id];
-              const opts=getLikertLabels(q);
-              const li=likertSelIndex(q,myAns);
-              const myIdx=li==null?-1:li;
-              const myLikLbl=likertAnswerLabel(q,myAns);
-              return html`<div key=${q.id}>
-                <p className="text-xs font-medium mb-2">${q.text}</p>
-                <div className="flex h-8 rounded-md overflow-hidden mb-1.5">
-                  ${data.dist.map((v,i,arr)=>{const w=v/t*100;const clr=getLikertColors(arr.length);const isMe=i===myIdx;
-                  return html`<div key=${i} className="sb-seg relative flex items-center justify-center text-white text-[10px] font-medium" style=${{width:`${w}%`,backgroundColor:clr[i],minWidth:v>0?'20px':'0'}}>
-                    ${w>8?`${w.toFixed(0)}%`:''}
-                    ${isMe?html`<span className="absolute -top-1 left-1/2 -translate-x-1/2 text-primary text-sm leading-none">▼</span>`:null}
-                  </div>`;})}
-                </div>
-                <div className="flex justify-between mb-1">${opts.map((l,i,arr)=>html`<span key=${i} className=${cn('text-[9px]',i===myIdx?'text-primary font-semibold':'text-muted-foreground')} style=${{width:`${100/arr.length}%`,textAlign:'center'}}>${l}</span>`)}</div>
-                ${myIdx>=0?html`<p className="text-[10px] text-primary font-medium">▲ Your answer: ${myLikLbl}</p>`:null}
-              </div>`;
-            })}
-            ${sv.sections.flatMap(sec=>sec.questions).filter(q=>q.type==='mc'&&MMR[q.id]).map(q=>{
-              const data=MMR[q.id];const myAns=myAnswers[q.id];
-              const myMc=mcAnswerLabel(q,myAns);
-              return html`<div key=${q.id}>
-                <p className="text-xs font-medium mb-2">${q.text}</p>
-                <div className="space-y-1.5">${data.map((it,i)=>{const isMe=it.label===myMc;return html`<div key=${i} className="flex items-center gap-2">
-                  <span className=${cn('text-[10px] w-32 text-right flex-shrink-0',isMe?'text-primary font-semibold':'text-muted-foreground')}>${it.label}</span>
-                  <div className="flex-1 h-6 bg-muted rounded-md overflow-hidden">
-                    <div className="h-full rounded-md flex items-center pl-2 text-[9px] font-medium text-white sb-seg" style=${{width:`${it.pct}%`,backgroundColor:isMe?'#7c3aed':i===1?'#a78bfa':i===2?'#c4b5fd':'#ddd6fe'}}>
-                      ${it.pct}%${isMe?' ◀ You':''}
-                    </div>
-                  </div>
-                </div>`;})}
-                </div>
-              </div>`;
-            })}
-            <div className="flex items-center gap-2 pt-1 border-t border-border text-muted-foreground/50">
-              <${I} name="text" size=${12}/><p className="text-[10px]">Free response answers are not shown to protect anonymity.</p>
-            </div>
-          </div>`
-          :html`<div className="px-5 py-8 text-center">
-            <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-3"><${I} name="student" size=${20} className="text-muted-foreground/40"/></div>
-            <p className="text-sm font-medium text-muted-foreground mb-1">Class results coming soon</p>
-            <p className="text-xs text-muted-foreground/60">Available after ${RESP_THRESHOLD} students respond · ${sv.responses||0} submitted so far</p>
-          </div>`}
-        </${Card}>
-      `:html`<div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-muted/60 border border-border text-xs text-muted-foreground">
-        <${I} name="shield" size=${13}/>
-        Class results are not shared for this survey.
-      </div>`}
+      <div className="flex items-start gap-2 px-4 py-3 rounded-lg bg-muted/60 border border-border text-xs text-muted-foreground">
+        <${I} name="shield" size=${13} className="mt-0.5 flex-shrink-0"/>
+        <div>
+          <p className="font-medium text-foreground/80">Only your own response is shown here.</p>
+          <p className="mt-0.5">Class-level results and AI Summary are teacher-only in Survey 1.0.</p>
+        </div>
+      </div>
 
     </div>`}
   </div>
@@ -2626,10 +2684,10 @@ const TEMPLATE_REC_STYLE=[
 ];
 
 const RECENT_SURVEYS=[
-  {id:'rs1',surveyId:'sv-1',title:'Midterm Course Feedback',status:'active',created:'Mar 3, 2026',questions:8,responses:38,total:62,sections:2,course:'ECON 101',teacher:'Prof. Johnson',coverFrom:'#fde68a',coverTo:'#f59e0b',coverIcon:'📊'},
+  {id:'rs1',surveyId:'sv-1',title:'Midterm Course Feedback',status:'assigned',created:'Mar 3, 2026',questions:8,responses:38,total:62,sections:2,course:'ECON 101',teacher:'Prof. Johnson',coverFrom:'#fde68a',coverTo:'#f59e0b',coverIcon:'📊'},
   {id:'rs2',surveyId:'sv-5',title:'Lab Experience Survey',status:'draft',created:'Feb 28, 2026',questions:4,responses:0,total:0,sections:2,course:'CS 201',teacher:'Prof. Chen',coverFrom:'#ddd6fe',coverTo:'#8b5cf6',coverIcon:'🔬'},
   {id:'rs3',surveyId:null,title:'End of Semester Survey',status:'closed',created:'Feb 15, 2026',questions:6,responses:55,total:60,sections:2,course:'MATH 301',teacher:'Prof. Williams',coverFrom:'#a7f3d0',coverTo:'#10b981',coverIcon:'📝'},
-  {id:'rs4',surveyId:'sv-2',title:'TA Evaluation',status:'active',created:'Feb 20, 2026',questions:5,responses:42,total:48,sections:2,course:'CS 201',teacher:'Prof. Chen',coverFrom:'#bfdbfe',coverTo:'#3b82f6',coverIcon:'📋'},
+  {id:'rs4',surveyId:'sv-2',title:'TA Evaluation',status:'assigned',created:'Feb 20, 2026',questions:5,responses:42,total:48,sections:2,course:'CS 201',teacher:'Prof. Chen',coverFrom:'#bfdbfe',coverTo:'#3b82f6',coverIcon:'📋'},
 ];
 
 /* ── Token Templates ── */
@@ -2641,7 +2699,7 @@ const TOKEN_TEMPLATES={
       '[grade level]':{type:'text',placeholder:'e.g. undergraduate',color:'text-violet-700 bg-violet-50 border-violet-200'},
       '[num questions]':{type:'text',placeholder:'e.g. 10',color:'text-violet-700 bg-violet-50 border-violet-200'},
       '[focus areas]':{type:'text',placeholder:'e.g. teaching quality, workload',color:'text-violet-700 bg-violet-50 border-violet-200'},
-      '[question types]':{type:'multi',placeholder:'question types',color:'text-violet-700 bg-violet-50 border-violet-200',options:['Likert Scale','Multiple Choice','Free Response','Essay']},
+      '[question types]':{type:'multi',placeholder:'question types',color:'text-violet-700 bg-violet-50 border-violet-200',options:['Rating scale','Multiple choice','Short answer']},
     }
   },
   'Lab Experience':{
@@ -2651,7 +2709,7 @@ const TOKEN_TEMPLATES={
       '[grade level]':{type:'text',placeholder:'e.g. high school',color:'text-violet-700 bg-violet-50 border-violet-200'},
       '[num questions]':{type:'text',placeholder:'e.g. 10',color:'text-violet-700 bg-violet-50 border-violet-200'},
       '[focus areas]':{type:'text',placeholder:'e.g. lab safety, equipment',color:'text-violet-700 bg-violet-50 border-violet-200'},
-      '[question types]':{type:'multi',placeholder:'question types',color:'text-violet-700 bg-violet-50 border-violet-200',options:['Likert Scale','Multiple Choice','Free Response','Essay']},
+      '[question types]':{type:'multi',placeholder:'question types',color:'text-violet-700 bg-violet-50 border-violet-200',options:['Rating scale','Multiple choice','Short answer']},
     }
   },
   'TA Evaluation':{
@@ -2661,7 +2719,7 @@ const TOKEN_TEMPLATES={
       '[grade level]':{type:'text',placeholder:'e.g. undergraduate',color:'text-violet-700 bg-violet-50 border-violet-200'},
       '[num questions]':{type:'text',placeholder:'e.g. 10',color:'text-violet-700 bg-violet-50 border-violet-200'},
       '[focus areas]':{type:'text',placeholder:'e.g. communication, helpfulness',color:'text-violet-700 bg-violet-50 border-violet-200'},
-      '[question types]':{type:'multi',placeholder:'question types',color:'text-violet-700 bg-violet-50 border-violet-200',options:['Likert Scale','Multiple Choice','Free Response','Essay']},
+      '[question types]':{type:'multi',placeholder:'question types',color:'text-violet-700 bg-violet-50 border-violet-200',options:['Rating scale','Multiple choice','Short answer']},
     }
   },
   'End of Semester':{
@@ -2671,7 +2729,7 @@ const TOKEN_TEMPLATES={
       '[grade level]':{type:'text',placeholder:'e.g. undergraduate',color:'text-violet-700 bg-violet-50 border-violet-200'},
       '[num questions]':{type:'text',placeholder:'e.g. 10',color:'text-violet-700 bg-violet-50 border-violet-200'},
       '[focus areas]':{type:'text',placeholder:'e.g. learning outcomes, course materials',color:'text-violet-700 bg-violet-50 border-violet-200'},
-      '[question types]':{type:'multi',placeholder:'question types',color:'text-violet-700 bg-violet-50 border-violet-200',options:['Likert Scale','Multiple Choice','Free Response','Essay']},
+      '[question types]':{type:'multi',placeholder:'question types',color:'text-violet-700 bg-violet-50 border-violet-200',options:['Rating scale','Multiple choice','Short answer']},
     }
   },
 };
@@ -2685,7 +2743,7 @@ const totalQ=template.sections.reduce((a,s)=>a+s.questions.length,0);
 const typeCount=(type)=>template.sections.flatMap(s=>s.questions).filter(q=>q.type===type).length;
 const lkCount=typeCount('likert');
 const mcCount=typeCount('mc');
-const frCount=template.sections.flatMap(s=>s.questions).filter(q=>q.type==='freeresponse'||q.type==='essay').length;
+const frCount=template.sections.flatMap(s=>s.questions).filter(q=>q.type==='freeresponse').length;
 const typeDot=(type)=>type==='likert'?'bg-violet-400':type==='mc'?'bg-blue-400':'bg-amber-400';
 const typeLabel=(type)=>QTM[type]||type;
 let qNum=0;
@@ -2738,13 +2796,13 @@ return html`<div className="flex min-h-[calc(100vh)]">
         <${I} name=${template.anon?'shield':'student'} size=${12}/> ${template.anon?'Anonymous':'Identified'}
       </div>
       ${lkCount>0?html`<div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-card border border-border px-3 py-1.5 rounded-full">
-        <span className="w-2 h-2 rounded-full bg-violet-400 flex-shrink-0"/>${lkCount} Likert
+        <span className="w-2 h-2 rounded-full bg-violet-400 flex-shrink-0"/>${lkCount} Rating scale
       </div>`:null}
       ${mcCount>0?html`<div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-card border border-border px-3 py-1.5 rounded-full">
-        <span className="w-2 h-2 rounded-full bg-blue-400 flex-shrink-0"/>${mcCount} Multiple Choice
+        <span className="w-2 h-2 rounded-full bg-blue-400 flex-shrink-0"/>${mcCount} Multiple choice
       </div>`:null}
       ${frCount>0?html`<div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-card border border-border px-3 py-1.5 rounded-full">
-        <span className="w-2 h-2 rounded-full bg-amber-400 flex-shrink-0"/>${frCount} Free Response
+        <span className="w-2 h-2 rounded-full bg-amber-400 flex-shrink-0"/>${frCount} Short answer
       </div>`:null}
     </div>
 
@@ -2803,15 +2861,36 @@ useEffect(()=>{
   return()=>document.removeEventListener('mousedown',close);
 },[editingToken]);
 const[generating,setGenerating]=useState(false);
+const[generationStatus,setGenerationStatus]=useState('idle');
+const[kiraPanelOpen,setKiraPanelOpen]=useState(false);
+const[creatorStage,setCreatorStage]=useState('compose');
+const[briefAnswers,setBriefAnswers]=useState({anonymous:null,count:null,focus:[]});
+const[kiraInput,setKiraInput]=useState('');
+const[kiraNotes,setKiraNotes]=useState([]);
 const[freePrompt,setFreePrompt]=useState('');
 const[promptSuffix,setPromptSuffix]=useState('');
 const[optimizing,setOptimizing]=useState(false);
+const QUICK_STARTS=[
+  {id:'course-feedback',label:'Course feedback',icon:'survey',prompt:'Create an 8-question anonymous course feedback survey for my current class. Focus on teaching clarity, workload, and course materials. Use rating-scale and short-answer questions.',anonymous:true,count:8,types:['Rating scale','Short answer'],tone:'Student-friendly'},
+  {id:'weekly-check-in',label:'Weekly check-in',icon:'clock',prompt:'Create a 5-question weekly check-in survey for my current class. Focus on student confidence, pacing, and support needs. Keep it quick and student-friendly.',anonymous:false,count:5,types:['Rating scale','Short answer'],tone:'Student-friendly'},
+  {id:'ta-evaluation',label:'TA evaluation',icon:'evaluate',prompt:'Create a 6-question anonymous TA evaluation survey for students supported by a TA. Focus on communication, helpfulness, and office hours. Use rating-scale and short-answer questions.',anonymous:true,count:6,types:['Rating scale','Short answer'],tone:'Professional'},
+  {id:'end-review',label:'End-of-term review',icon:'book',prompt:'Create a 10-question anonymous end-of-term course review. Focus on learning outcomes, assessments, course design, and suggestions for next term.',anonymous:true,count:10,types:['Rating scale','Multiple choice','Short answer'],tone:'Professional'},
+];
+const QUESTION_MIX=['Rating scale','Multiple choice','Short answer'];
+const TONE_OPTIONS=['Student-friendly','Professional','Warm','Concise'];
+const[settings,setSettings]=useState({anonymous:true,count:8,types:['Rating scale','Short answer'],tone:'Student-friendly'});
+const[advancedOpen,setAdvancedOpen]=useState(false);
+const updateSettings=(key,val)=>setSettings(p=>({...p,[key]:val}));
+const toggleSettingList=(key,val)=>setSettings(p=>{const cur=p[key]||[];return{...p,[key]:cur.includes(val)?cur.filter(x=>x!==val):[...cur,val]};});
+const selectedQuick=QUICK_STARTS.find(q=>q.id===activeChip);
 const PLACEHOLDER_EXAMPLES=[
-  'e.g. Create a 5-question mid-semester check-in for ECON 101, anonymous, with Likert and open-ended questions.',
+  'e.g. Create a 5-question mid-semester check-in for ECON 101, anonymous, with rating-scale and short-answer questions.',
   'e.g. Weekly wellbeing pulse for my CS class — keep it under 3 minutes.',
   'e.g. End-of-semester review focusing on teaching quality and workload balance.',
   'e.g. TA evaluation survey, anonymous, covering communication and helpfulness.',
 ];
+const FOCUS_CHOICES=['Workload','Pacing','Confidence','Teaching clarity','Support needs','Course materials'];
+const GEN_STEPS=['Understanding your goal','Choosing question types','Drafting editable questions','Preparing survey editor'];
 const[phIdx,setPhIdx]=useState(0);
 useEffect(()=>{
   if(freePrompt)return;
@@ -2841,18 +2920,18 @@ const doOptimize=()=>{
   if(optimizing)return;
   setOptimizing(true);
   setTimeout(()=>{
-    if(!tpl&&freePrompt.trim()){
-      setFreePrompt('Create a concise, anonymous survey with '+
-        (freePrompt.match(/\d+/)?freePrompt.match(/\d+/)[0]:'8')+
-        ' well-structured questions covering '+freePrompt.replace(/create|generate|make|a |an |survey|questions?|about/gi,'').trim().replace(/\s+/,' ')+
-        '. Include a mix of Likert scale and open-ended questions for richer insights.');
-    } else if(tpl){
-      setPromptSuffix('Focus on actionable insights and avoid leading questions.');
+    if(!freePrompt.trim()){
+      const base=selectedQuick||QUICK_STARTS[0];
+      setFreePrompt(base.prompt);
+      setSettings({anonymous:base.anonymous,count:base.count,types:base.types,tone:base.tone});
+      setActiveChip(base.id);
+    }else{
+      setFreePrompt(p=>p.trim()+` Make it ${settings.tone.toLowerCase()}, use ${settings.count} questions, and include ${settings.types.join(' and ')} questions.`);
     }
     setOptimizing(false);
-  },1100);
+  },700);
 };
-const stCfg={active:{label:'Active',variant:'success'},draft:{label:'Draft',variant:'secondary'},closed:{label:'Archived',variant:'outline'}};
+const stCfg={active:{label:'Active',variant:'success'},draft:{label:'Draft',variant:'secondary'},assigned:{label:'Active',variant:'success'},closed:{label:'Closed',variant:'outline'},expired:{label:'Expired',variant:'outline'}};
 const[cardMenu,setCardMenu]=useState(null);
 const[starred,setStarred]=useState({});
 const[favToast,setFavToast]=useState(null);
@@ -2866,260 +2945,164 @@ useEffect(()=>{
   return()=>document.removeEventListener('mousedown',close);
 },[cardMenu]);
 
-const tpl=activeChip?TOKEN_TEMPLATES[activeChip]:null;
-const setToken=(key,val)=>setTokenValues({...tokenValues,[key]:val});
-const toggleMulti=(key,opt)=>{const cur=tokenValues[key]||[];const next=cur.includes(opt)?cur.filter(o=>o!==opt):[...cur,opt];setToken(key,next);};
-
-const buildPrompt=()=>{
-  if(!tpl)return '';
-  return tpl.parts.map(p=>{
-    if(tpl.tokens[p]){
-      const v=tokenValues[p];
-      if(!v||(Array.isArray(v)&&v.length===0))return tpl.tokens[p].placeholder;
-      return Array.isArray(v)?v.join(', '):v;
-    }
-    return p;
-  }).join('');
-};
-
-const allFilled=tpl&&Object.keys(tpl.tokens).every(k=>{const v=tokenValues[k];return v&&(Array.isArray(v)?v.length>0:v.trim());});
-const canGenerate=allFilled||(!tpl&&freePrompt.trim().length>0);
+const toggleBriefFocus=(focus)=>setBriefAnswers(p=>({ ...p,focus:p.focus.includes(focus)?p.focus.filter(x=>x!==focus):[...p.focus,focus] }));
+const hasClarifyingAnswers=briefAnswers.anonymous!==null&&!!briefAnswers.count&&briefAnswers.focus.length>0;
+const promptHasEnoughDetail=freePrompt.trim().length>90||!!activeChip||uploadedFiles.length>0;
+const shouldClarify=!promptHasEnoughDetail&&!hasClarifyingAnswers;
+const briefSummary=[
+  briefAnswers.anonymous===null?null:(briefAnswers.anonymous?'Anonymous':'Identified'),
+  briefAnswers.count?`${briefAnswers.count} questions`:null,
+  briefAnswers.focus.length?briefAnswers.focus.join(', '):null,
+].filter(Boolean).join(' · ');
+const showKiraPanel=kiraPanelOpen;
+const canGenerate=freePrompt.trim().length>0||!!activeChip;
 
 
 const[showToast,setShowToast]=useState(false);
 const genTitle=()=>{
-  if(tpl){const nm=tokenValues['[course name]'];return nm?(nm+' Survey'):(activeChip+' Survey');}
+  if(selectedQuick)return selectedQuick.label+' Survey';
   const m=freePrompt.match(/survey\s+(?:about|on|for)\s+([^,\.]+)/i);
   return m?m[1].trim().replace(/^\w/,c=>c.toUpperCase())+' Survey':'New AI Survey';
 };
-const doGen=()=>{
+const startGeneration=()=>{
+  setKiraPanelOpen(true);
+  setCreatorStage('generating');
+  setGenerationStatus('generating');
   setGenerating(true);
   setShowToast(true);
   setTimeout(()=>setShowToast(false),4000);
-  setTimeout(()=>{setGenerating(false);onNav('t-editor');},2800);
+  setTimeout(()=>{setGenerating(false);setGenerationStatus('ready');setCreatorStage('ready');},3200);
+};
+const doGen=()=>{
+  if(!freePrompt.trim())return;
+  setKiraPanelOpen(true);
+  if(shouldClarify){setCreatorStage('clarify');return;}
+  startGeneration();
+};
+const openAskKira=()=>{
+  setKiraPanelOpen(true);
+  setCreatorStage('ask');
+};
+const sendKiraMessage=()=>{
+  const msg=kiraInput.trim();
+  if(!msg)return;
+  setKiraNotes(prev=>[...prev,{id:Date.now(),text:msg}]);
+  setKiraInput('');
 };
 
 const selectChip=(chip)=>{
-  if(activeChip===chip){setActiveChip(null);setEditingToken(null);setPromptSuffix('');}
-  else{setActiveChip(chip);setEditingToken(null);setMultiOpen(false);setPromptSuffix('');}
+  const preset=QUICK_STARTS.find(q=>q.id===chip);
+  if(!preset)return;
+  if(activeChip===chip){setActiveChip(null);return;}
+  setActiveChip(chip);
+  setFreePrompt(preset.prompt);
+  setSettings({anonymous:preset.anonymous,count:preset.count,types:preset.types,tone:preset.tone});
+  setBriefAnswers({anonymous:preset.anonymous,count:preset.count,focus:preset.prompt.includes('workload')?['Workload','Pacing']:preset.prompt.includes('confidence')?['Confidence','Support needs']:preset.prompt.includes('TA')?['Teaching clarity','Support needs']:['Teaching clarity','Course materials']});
 };
 
 return html`<div className="flex min-h-[calc(100vh)]">
 <${Sidebar} onNav=${onNav} active="t-home"/>
-<div className="flex-1 overflow-auto bg-muted/40">
-<div className="max-w-4xl mx-auto px-8 py-8">
-  <div className="mb-8">
-    <h1 className="text-2xl font-bold tracking-tight mb-1">Create a Survey</h1>
-    <p className="text-muted-foreground">Describe your course and let AI build the survey — or start from scratch in seconds.</p>
+<div className="flex-1 min-w-0 overflow-auto bg-muted/40">
+<div className=${cn('mx-auto px-8 py-6 transition-all duration-200',showKiraPanel?'max-w-5xl':'max-w-5xl')}>
+  <div className="mb-6 flex items-start justify-between gap-4">
+    <div>
+      <h1 className="text-2xl font-bold tracking-tight mb-1">Create a Survey</h1>
+      <p className="text-muted-foreground">Describe your course and let AI build the survey — or start from scratch in seconds.</p>
+    </div>
+    <button onClick=${openAskKira} className=${cn('h-9 px-3 rounded-lg border text-sm font-semibold flex items-center gap-2 transition-all bg-card shadow-sm flex-shrink-0',creatorStage==='ask'?'border-primary text-primary bg-primary/5':'border-border text-foreground hover:border-primary/40 hover:text-primary')}>
+      <${I} name="sparkle" size=${14}/> Ask Kira
+    </button>
   </div>
 
-  <${Card} className="mb-8">
-    <div className="bg-gradient-to-r from-primary/5 via-purple-500/5 to-primary/5 px-6 pt-5 pb-4 rounded-lg">
-      <div className="flex items-center gap-2 mb-4"><${I} name="sparkle" size=${18} className="text-primary"/><h2 className="text-sm font-semibold">AI Survey Generator</h2></div>
+  <${Card} className="mb-6 overflow-hidden">
+    <div className="px-6 pt-5 pb-5 rounded-lg bg-gradient-to-r from-primary/5 via-purple-500/5 to-primary/5">
+      <div className="flex items-start justify-between gap-4 mb-4">
+        <div className="flex items-start gap-3 min-w-0">
+          <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+            <${I} name="sparkle" size=${18} className="text-primary"/>
+          </div>
+          <div className="min-w-0">
+            <h2 className="text-sm font-semibold">AI Survey Generator</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">Describe what you want to learn from students. AI will draft an editable survey.</p>
+          </div>
+        </div>
+        <${Btn} size="sm" variant="outline" onClick=${()=>onNav('t-editor')} className="text-primary border-primary/25 bg-background/80 hover:bg-primary/5 flex-shrink-0">
+          <${I} name="plus" size=${13}/> Blank Survey
+        </${Btn}>
+      </div>
 
       ${uploadedFiles.length>0?html`<div className="flex flex-wrap gap-2 mb-3">
-        ${uploadedFiles.map(f=>html`<div key=${f.id} className="flex items-center gap-1.5 px-2.5 py-1.5 bg-muted rounded-lg border border-border text-xs group fi">
+        ${uploadedFiles.map(f=>html`<div key=${f.id} className="flex items-center gap-1.5 px-2.5 py-1.5 bg-background rounded-lg border border-border text-xs group fi">
           <span>${fileIcon(f.type)}</span>
           <span className="font-medium max-w-[140px] truncate">${f.name}</span>
           <span className="text-muted-foreground/60">${fmtSize(f.size)}</span>
-          <button onClick=${()=>removeFile(f.id)} className="ml-0.5 text-muted-foreground/40 hover:text-destructive transition-colors opacity-0 group-hover:opacity-100">
-            <${I} name="close" size=${11}/>
-          </button>
+          <button onClick=${()=>removeFile(f.id)} className="ml-0.5 text-muted-foreground/40 hover:text-destructive transition-colors opacity-0 group-hover:opacity-100"><${I} name="close" size=${11}/></button>
         </div>`)}
       </div>`:null}
 
-      ${tpl?html`<div className="relative mb-4">
-      <div className="bg-background rounded-lg border border-border px-4 py-3.5 fi overflow-visible pr-10">
-        <div className="flex flex-wrap items-baseline gap-y-2 gap-x-0.5 text-sm leading-relaxed">
-          ${tpl.parts.map((part,i)=>{
-            const td=tpl.tokens[part];
-            if(!td)return html`<span key=${i} className="text-foreground">${part}</span>`;
-            const val=tokenValues[part];
-            const isMulti=td.type==='multi';
-            const display=isMulti?(val&&val.length>0?val.join(', '):null):val;
-            const isEditing=editingToken===part;
-
-            if(isMulti){
-              return html`<div key=${i} className="relative inline-flex">
-                <button onMouseDown=${e=>e.stopPropagation()} onClick=${()=>{setEditingToken(isEditing?null:part);setMultiOpen(!isEditing);}}
-                  className=${cn('inline-flex items-center gap-1 px-2 py-0.5 rounded-md border text-xs font-medium transition-all',td.color,isEditing?'ring-2 ring-offset-1 ring-primary/40':'hover:opacity-80')}>
-                  ${display||html`<span className="opacity-50">${td.placeholder}</span>`}
-                  <${I} name="chevron" size=${10} className=${cn('transition-transform',isEditing?'rotate-180':'')}/>
-                </button>
-                ${isEditing?html`<div className="absolute left-0 top-full mt-1 z-50 bg-popover rounded-lg border border-border shadow-lg py-1.5 min-w-[180px] fi" onMouseDown=${e=>e.stopPropagation()}>
-                  ${td.options.map(opt=>{const sel=(tokenValues[part]||[]).includes(opt);return html`<button key=${opt} onClick=${()=>toggleMulti(part,opt)}
-                    className="w-full flex items-center gap-2.5 px-3 py-1.5 hover:bg-accent text-sm transition-colors text-left">
-                    <div className=${cn('w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0',sel?'bg-primary border-primary':'border-input')}>
-                      ${sel?html`<${I} name="check" size=${10} className="text-primary-foreground"/>`:null}
-                    </div>
-                    ${opt}
-                  </button>`;})}
-                </div>`:null}
-              </div>`;
-            }
-
-            if(isEditing){
-              return html`<input key=${i} autoFocus type="text" value=${val||''} placeholder=${td.placeholder}
-                onChange=${e=>setToken(part,e.target.value)}
-                onBlur=${()=>setEditingToken(null)}
-                onKeyDown=${e=>{if(e.key==='Enter'||e.key==='Escape')setEditingToken(null);}}
-                className=${cn('inline px-2 py-0.5 rounded-md border text-xs font-medium outline-none ring-2 ring-offset-1 ring-primary/40 min-w-[120px]',td.color)}
-                style=${{width:Math.max(120,(val||td.placeholder).length*8)+'px'}}/>`;
-            }
-
-            return html`<button key=${i} onClick=${()=>setEditingToken(part)}
-              className=${cn('inline-flex items-center px-2 py-0.5 rounded-md border text-xs font-medium transition-all hover:opacity-80',td.color)}>
-              ${display||html`<span className="opacity-50">${td.placeholder}</span>`}
-            </button>`;
-          })}
-          <input
-            type="text"
-            value=${promptSuffix}
-            onChange=${e=>setPromptSuffix(e.target.value)}
-            placeholder=" Add more..."
-            className="inline bg-transparent border-none outline-none text-sm text-foreground placeholder:text-muted-foreground/40 min-w-[100px]"
-            style=${{width:Math.max(100,(promptSuffix.length+1)*8)+'px'}}
-          />
-        </div>
-      </div>
-      <!-- clip button for token editor -->
-      ${showUploadMenu?html`<div className="absolute top-full right-0 mt-1 bg-card border border-border rounded-xl shadow-xl py-1.5 min-w-[170px] z-30" ref=${uploadMenuRef}>
-        <button onClick=${()=>{fileInputRef.current&&fileInputRef.current.click();setShowUploadMenu(false);}}
-          className="flex items-center gap-2.5 px-4 py-2 text-sm hover:bg-accent w-full text-left transition-colors">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-muted-foreground flex-shrink-0"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-          <span>Upload File</span>
-        </button>
-        <button className="flex items-center gap-2.5 px-4 py-2 text-sm hover:bg-accent w-full text-left transition-colors cursor-default opacity-60">
-          <svg width="16" height="16" viewBox="0 0 87.3 78" xmlns="http://www.w3.org/2000/svg" className="flex-shrink-0">
-            <path d="M6.6 66.85l3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3L28 53H0c0 1.55.4 3.1 1.2 4.5z" fill="#0066da"/>
-            <path d="M43.65 25L29.35 0c-1.35.8-2.5 1.9-3.3 3.3L1.2 48.5A9 9 0 000 53h28z" fill="#00ac47"/>
-            <path d="M73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75L86.1 57.5c.8-1.4 1.2-2.95 1.2-4.5H59.3l5.9 11.5z" fill="#ea4335"/>
-            <path d="M43.65 25L57.95 0H29.35L43.65 25z" fill="#00832d"/>
-            <path d="M59.3 53H87.3L73 28H45l14.3 25z" fill="#2684fc"/>
-            <path d="M43.65 25L29.35 53h30z" fill="#00ac47"/>
-          </svg>
-          <span>Google Drive</span>
-        </button>
-      </div>`:null}
-      <div className="absolute bottom-2 right-2">
-        <button onClick=${()=>setShowUploadMenu(v=>!v)}
-          title="Attach file"
-          className=${cn('w-7 h-7 rounded-md flex items-center justify-center transition-all',showUploadMenu?'text-primary bg-primary/10':'text-muted-foreground hover:text-primary hover:bg-primary/5')}>
-          <${I} name="clip" size=${14}/>
-        </button>
-      </div>
-      </div>`:html`<div className="relative mb-2">
+      <div className="relative mb-4">
         <${Txta}
           value=${freePrompt}
-          onChange=${e=>setFreePrompt(e.target.value)}
-          placeholder=${PLACEHOLDER_EXAMPLES[phIdx]}
-          onKeyDown=${e=>{if((e.metaKey||e.ctrlKey)&&e.key==='Enter'&&canGenerate&&!generating){e.preventDefault();doGen();}}}
-          className="w-full text-sm bg-background/80 pr-10"
+          onChange=${e=>{setFreePrompt(e.target.value);if(generationStatus==='ready')setGenerationStatus('idle');}}
+          placeholder="Example: Create a short anonymous survey to understand workload, pacing, and student confidence this week."
+          onKeyDown=${e=>{if((e.metaKey||e.ctrlKey)&&e.key==='Enter'&&freePrompt.trim()&&generationStatus!=='generating'){e.preventDefault();doGen();}}}
+          className="w-full min-h-[120px] text-sm bg-background/90 pr-12"
         />
-        <!-- clip button inside textarea bottom-right -->
         ${showUploadMenu?html`<div className="absolute top-full right-0 mt-1 bg-card border border-border rounded-xl shadow-xl py-1.5 min-w-[170px] z-30" ref=${uploadMenuRef}>
-          <button onClick=${()=>{fileInputRef.current&&fileInputRef.current.click();setShowUploadMenu(false);}}
-            className="flex items-center gap-2.5 px-4 py-2 text-sm hover:bg-accent w-full text-left transition-colors">
+          <button onClick=${()=>{fileInputRef.current&&fileInputRef.current.click();setShowUploadMenu(false);}} className="flex items-center gap-2.5 px-4 py-2 text-sm hover:bg-accent w-full text-left transition-colors">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-muted-foreground flex-shrink-0"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
             <span>Upload File</span>
           </button>
           <button className="flex items-center gap-2.5 px-4 py-2 text-sm hover:bg-accent w-full text-left transition-colors cursor-default opacity-60">
-            <svg width="16" height="16" viewBox="0 0 87.3 78" xmlns="http://www.w3.org/2000/svg" className="flex-shrink-0">
-              <path d="M6.6 66.85l3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3L28 53H0c0 1.55.4 3.1 1.2 4.5z" fill="#0066da"/>
-              <path d="M43.65 25L29.35 0c-1.35.8-2.5 1.9-3.3 3.3L1.2 48.5A9 9 0 000 53h28z" fill="#00ac47"/>
-              <path d="M73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75L86.1 57.5c.8-1.4 1.2-2.95 1.2-4.5H59.3l5.9 11.5z" fill="#ea4335"/>
-              <path d="M43.65 25L57.95 0H29.35L43.65 25z" fill="#00832d"/>
-              <path d="M59.3 53H87.3L73 28H45l14.3 25z" fill="#2684fc"/>
-              <path d="M43.65 25L29.35 53h30z" fill="#00ac47"/>
-            </svg>
+            <svg width="16" height="16" viewBox="0 0 87.3 78" xmlns="http://www.w3.org/2000/svg" className="flex-shrink-0"><path d="M6.6 66.85l3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3L28 53H0c0 1.55.4 3.1 1.2 4.5z" fill="#0066da"/><path d="M43.65 25L29.35 0c-1.35.8-2.5 1.9-3.3 3.3L1.2 48.5A9 9 0 000 53h28z" fill="#00ac47"/><path d="M73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75L86.1 57.5c.8-1.4 1.2-2.95 1.2-4.5H59.3l5.9 11.5z" fill="#ea4335"/><path d="M43.65 25L57.95 0H29.35L43.65 25z" fill="#00832d"/><path d="M59.3 53H87.3L73 28H45l14.3 25z" fill="#2684fc"/><path d="M43.65 25L29.35 53h30z" fill="#00ac47"/></svg>
             <span>Google Drive</span>
           </button>
         </div>`:null}
         <div className="absolute bottom-2 right-2">
-          <button onClick=${()=>setShowUploadMenu(v=>!v)}
-            title="Attach file"
-            className=${cn('w-7 h-7 rounded-md flex items-center justify-center transition-all',showUploadMenu?'text-primary bg-primary/10':'text-muted-foreground hover:text-primary hover:bg-primary/5')}>
+          <button onClick=${()=>setShowUploadMenu(v=>!v)} title="Attach file" className=${cn('w-8 h-8 rounded-lg flex items-center justify-center transition-all',showUploadMenu?'text-primary bg-primary/10':'text-muted-foreground hover:text-primary hover:bg-primary/5')}>
             <${I} name="clip" size=${14}/>
           </button>
         </div>
-      </div>`}
-
-      <!-- hint row: estimate -->
-      <div className="mb-3 px-0.5">
-        <span className="text-[11px] text-muted-foreground/60 transition-all">
-          ${freePrompt.trim().length>10
-            ?html`<span className="text-primary/70">✦ Will generate ~${freePrompt.match(/\d+/)?Math.min(parseInt(freePrompt.match(/\d+/)[0]),20):8} questions</span>`
-            :tpl?html`<span className="text-primary/70">✦ Will generate ~${Object.keys(tpl.tokens).length+4} questions</span>`
-            :'Start typing or pick a template below'}
-        </span>
       </div>
 
       <input ref=${fileInputRef} type="file" multiple accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg,.csv,.xlsx" className="hidden" onChange=${onFileChange}/>
 
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2 flex-wrap">
-          ${Object.keys(TOKEN_TEMPLATES).map(chip=>html`<button key=${chip} onClick=${()=>selectChip(chip)}
-            className=${cn('px-3 py-1 rounded-full border text-xs font-medium transition-all',
-              activeChip===chip?'bg-primary text-primary-foreground border-primary shadow-sm':'border-border text-muted-foreground bg-background hover:border-primary/50 hover:text-foreground')}>
-            ${chip}
-          </button>`)}
+      <div className="flex items-end justify-between gap-4 pt-1">
+        <div className="min-w-0 flex-1">
+          <span className="block text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">Suggested starters</span>
+          <div className="flex flex-wrap gap-2">
+            ${QUICK_STARTS.map(q=>html`<button key=${q.id} onClick=${()=>selectChip(q.id)} className=${cn('inline-flex items-center gap-1.5 h-8 px-3 rounded-full border text-xs font-semibold transition-all bg-background hover:border-primary/40 hover:text-primary',activeChip===q.id?'border-primary text-primary bg-primary/5':'border-border text-muted-foreground')}>
+              <${I} name=${q.icon} size=${12}/>${q.label}
+            </button>`)}
+          </div>
         </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
-          <button onClick=${doOptimize} disabled=${optimizing||(!freePrompt.trim()&&!tpl)}
-            title="Optimize prompt with AI"
-            className=${cn('w-8 h-8 rounded-lg flex items-center justify-center transition-all',
-              optimizing?'text-primary/40 cursor-not-allowed':
-              (!freePrompt.trim()&&!tpl)?'text-muted-foreground/30 cursor-not-allowed':
-              'text-muted-foreground hover:text-primary hover:bg-primary/5')}>
-            ${optimizing
-              ?html`<span className="animate-spin inline-block w-3.5 h-3.5 border-2 border-primary/30 border-t-primary rounded-full"/>`
-              :html`<${I} name="wand" size=${15}/>`}
-          </button>
-          <${Btn} onClick=${doGen} disabled=${!canGenerate||generating} className="shadow-lg shadow-primary/20">
-            ${generating
-              ?html`<span className="animate-spin inline-block w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full"/> Generating...`
-              :html`<${I} name="lightning" size=${14}/> Generate`}
-          </${Btn}>
-        </div>
+        <${Btn} onClick=${doGen} disabled=${!freePrompt.trim()||generationStatus==='generating'||(creatorStage==='clarify'&&!hasClarifyingAnswers)} className="shadow-lg shadow-primary/20 flex-shrink-0">
+          ${generationStatus==='generating'?html`<span className="animate-spin inline-block w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full"/> Generating...`:creatorStage==='clarify'?html`<${I} name="lightning" size=${14}/> Generate with Kira`:html`<${I} name="lightning" size=${14}/> Generate Survey`}
+        </${Btn}>
       </div>
     </div>
   </${Card}>
 
-  <div className="flex items-center gap-4 mb-8">
-    <${Sep} className="flex-1"/>
-    <span className="text-xs text-muted-foreground font-medium">OR</span>
-    <${Sep} className="flex-1"/>
-  </div>
-
-  <button onClick=${()=>onNav('t-editor')} className="group w-full flex items-center gap-4 px-5 py-4 rounded-lg border-2 border-dashed border-border hover:border-primary/50 hover:bg-primary/[0.02] transition-all mb-10">
-    <div className="w-10 h-10 rounded-md bg-primary/10 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/15 transition-colors"><${I} name="plus" size=${20} className="text-primary"/></div>
-    <div className="text-left">
-      <p className="text-sm font-semibold">Blank Survey</p>
-      <p className="text-xs text-muted-foreground">Start with an empty canvas and build your own survey from scratch</p>
-    </div>
-  </button>
-
-  <!-- Recommended Surveys — icon tiles, one horizontal row (scroll on narrow viewports) -->
-  <${Card} className="mb-10 p-5">
+  <!-- Recommended Surveys — compact tiles for scale -->
+  <${Card} className="mb-8 p-4">
     <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
       <div className="flex items-center gap-2 min-w-0">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-muted-foreground flex-shrink-0"><path d="m17 2 4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
         <span className="text-sm font-semibold tracking-tight">Recommended for you</span>
       </div>
-      <button type="button" className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1 self-start sm:self-center flex-shrink-0">
-        Browse all templates <${I} name="chevron" size=${11} className="-rotate-90"/>
-      </button>
     </div>
-    <div className="mt-4 w-full min-w-0 overflow-x-auto overflow-y-visible pb-1">
-      <div className="grid grid-flow-col auto-cols-[minmax(104px,1fr)] grid-rows-1 gap-3 min-w-max sm:min-w-0 sm:grid-flow-row sm:grid-cols-5 sm:auto-cols-auto">
+    <div className="mt-4 w-full min-w-0">
+      <div className="grid grid-cols-3 gap-3">
         ${TEMPLATES.map((tpl,i)=>{const nQ=tpl.sections.reduce((a,s)=>a+s.questions.length,0);const tc=TEMPLATE_REC_STYLE[i%TEMPLATE_REC_STYLE.length];
         return html`<button key=${tpl.id} type="button" onClick=${()=>onPreviewTemplate(tpl)}
-          className="group flex w-[112px] sm:w-auto flex-none flex-col items-center rounded-2xl border border-border bg-background px-2 pt-3 pb-2.5 text-center shadow-sm transition-all hover:border-primary/40 hover:bg-primary/[0.04] hover:shadow-md sm:min-w-0 sm:flex-1">
-          <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-2xl shadow-sm ring-1 ring-black/5" style=${{background:tc.bg}}>
-            <span className="flex items-center justify-center" style=${{color:tc.color}}><${I} name=${tpl.icon} size=${22}/></span>
+          className="group flex min-w-0 items-center gap-3 rounded-xl border border-border bg-background px-3 py-3 text-left shadow-sm transition-all hover:border-primary/40 hover:bg-primary/[0.04] hover:shadow-md">
+          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl shadow-sm ring-1 ring-black/5" style=${{background:tc.bg}}>
+            <span className="flex items-center justify-center" style=${{color:tc.color}}><${I} name=${tpl.icon} size=${18}/></span>
           </div>
-          <span className="line-clamp-2 min-h-[2.5rem] px-0.5 text-[11px] font-semibold leading-snug text-foreground">${tpl.label}</span>
-          <span className="mt-1 text-[10px] tabular-nums text-muted-foreground">${nQ} Q</span>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-xs font-semibold leading-snug text-foreground">${tpl.label}</p>
+            <p className="mt-0.5 text-[10px] tabular-nums text-muted-foreground">${nQ} questions</p>
+          </div>
         </button>`;})}
       </div>
     </div>
@@ -3130,23 +3113,26 @@ return html`<div className="flex min-h-[calc(100vh)]">
     <${Btn} variant="ghost" size="sm" className="text-muted-foreground" onClick=${()=>onNav('t-assign')}>View All <${I} name="chevron" size=${12} className="-rotate-90"/></${Btn}>
   </div>
   <div className="grid grid-cols-2 gap-4">
-    ${generating?html`<${Card} className="overflow-hidden border-primary/30 bg-primary/[0.02] fi">
+    ${generationStatus==='generating'||generationStatus==='ready'?html`<${Card} className=${cn('overflow-hidden fi',generationStatus==='ready'?'border-emerald-500/30 bg-emerald-500/[0.03]':'border-primary/30 bg-primary/[0.02]')}>
       <div className="px-5 py-4">
         <div className="flex items-center justify-between mb-3">
-          <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
-            <span className="animate-spin inline-block w-2.5 h-2.5 border-2 border-primary/30 border-t-primary rounded-full"/>
-            Generating
+          <span className=${cn('inline-flex items-center gap-1.5 text-[11px] font-semibold px-2 py-0.5 rounded-full',generationStatus==='ready'?'text-emerald-700 bg-emerald-500/10':'text-primary bg-primary/10')}>
+            ${generationStatus==='ready'?html`<${I} name="check" size=${11}/>`:html`<span className="animate-spin inline-block w-2.5 h-2.5 border-2 border-primary/30 border-t-primary rounded-full"/>`}
+            ${generationStatus==='ready'?'Ready':'Generating'}
           </span>
           <span className="text-[10px] text-muted-foreground">Just now</span>
         </div>
-        <div className="h-4 bg-primary/10 rounded animate-pulse mb-1.5 w-3/4"/>
-        <div className="h-3 bg-muted rounded animate-pulse mb-4 w-1/2"/>
-        <p className="text-xs text-muted-foreground/70 italic mb-3">AI is crafting questions tailored to your prompt — this usually takes a few seconds.</p>
-        <div className="space-y-1.5">
-          <div className="h-2 bg-muted rounded-full animate-pulse w-full"/>
-          <div className="h-2 bg-muted rounded-full animate-pulse w-4/5"/>
-          <div className="h-2 bg-muted rounded-full animate-pulse w-2/3"/>
+        <h3 className="text-sm font-semibold leading-snug mb-1">${generationStatus==='ready'?genTitle():`Generating: ${genTitle()}`}</h3>
+        <p className="text-xs text-muted-foreground mb-4">${generationStatus==='ready'?'Kira prepared an editable draft. Review it before assigning to students.':'Kira is preparing this draft. You can keep working or reopen Kira AI anytime.'}</p>
+        <div className="space-y-2.5 mb-4">
+          ${GEN_STEPS.map((step,i)=>html`<div key=${step} className="flex items-center gap-2 text-xs">
+            <span className=${cn('w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0',generationStatus==='ready'||i<2?'bg-primary/10 text-primary':'bg-muted text-muted-foreground')}>
+              ${generationStatus==='ready'||i<2?html`<${I} name="check" size=${11}/>`:i===2?html`<span className="animate-pulse w-1.5 h-1.5 rounded-full bg-primary"/>`:i+1}
+            </span>
+            <span className=${cn(generationStatus==='ready'||i<2?'text-foreground':'text-muted-foreground')}>${step}</span>
+          </div>`)}
         </div>
+        ${generationStatus==='ready'?html`<${Btn} size="sm" onClick=${()=>onNav('t-editor')} className="w-full">Review Draft <${I} name="chevron" size=${12} className="-rotate-90"/></${Btn}>`:html`<p className="text-[11px] text-muted-foreground/70">This task stays at the top of Recent Surveys until it is ready.</p>`}
       </div>
     </${Card}>`:null}
     ${RECENT_SURVEYS.filter(rs=>rs.status!=='closed').map(rs=>{const isStarred=!!starred[rs.id];const menuOpen=cardMenu===rs.id;
@@ -3220,14 +3206,185 @@ ${favToast?html`<div className="fixed bottom-6 right-6 z-50 fi">
   </div>
 </div>`:null}
 
-${showToast?html`<div className="fixed bottom-6 right-6 z-50 fi">
+${showKiraPanel?html`<aside className="w-[360px] flex-shrink-0 h-[calc(100vh)] bg-card border-l border-border fi">
+  <div className="h-full overflow-hidden flex flex-col">
+    <div className="h-14 px-4 border-b border-border flex items-center justify-between">
+      <div className="flex items-center gap-2.5">
+        <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
+          <${I} name="sparkle" size=${14} className="text-primary"/>
+        </div>
+        <div>
+          <p className="text-sm font-semibold leading-tight">${creatorStage==='ask'?'New chat':'New survey draft'}</p>
+          <p className="text-[11px] text-muted-foreground">${creatorStage==='ask'?'Ask Kira about surveys':creatorStage==='clarify'?'Clarifying requirements':creatorStage==='generating'?'Generating draft':'Ready to review'}</p>
+        </div>
+      </div>
+      <div className="flex items-center gap-1">
+        <button onClick=${()=>setKiraPanelOpen(false)} className="w-8 h-8 rounded-full flex items-center justify-center transition-colors text-muted-foreground hover:text-foreground hover:bg-accent">
+          <${I} name="close" size=${13}/>
+        </button>
+      </div>
+    </div>
+
+    <div className="flex-1 overflow-y-auto px-4 py-4 bg-card">
+
+      <div className="space-y-4">
+        ${creatorStage==='ask'?html`<div className="flex items-start gap-2.5">
+          <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+            <${I} name="sparkle" size=${12} className="text-primary"/>
+          </div>
+          <div className="max-w-[86%] rounded-2xl rounded-tl-md bg-card border border-border px-4 py-3 shadow-sm">
+            <p className="text-sm font-medium mb-1">Hi! I can help you create or improve a survey.</p>
+            <p className="text-xs text-muted-foreground mb-3">Ask a question, or pick a common starting point.</p>
+            <div className="space-y-2">
+              ${[
+                'What survey should I create for this class?',
+                'Help me make this survey shorter',
+                'Should this be anonymous or identified?'
+              ].map(s=>html`<button key=${s} onClick=${()=>setKiraInput(s)} className="w-full text-left rounded-xl border border-border bg-background px-3 py-2 text-xs font-medium text-muted-foreground hover:border-primary/40 hover:text-primary transition-all">${s}</button>`)}
+            </div>
+          </div>
+        </div>`:html`<div className="flex justify-end">
+          <div className="max-w-[82%] rounded-2xl rounded-tr-md bg-primary text-primary-foreground px-4 py-2.5 text-sm shadow-sm">
+            ${freePrompt.trim()}
+          </div>
+        </div>`}
+
+        ${kiraNotes.map(note=>html`<div key=${note.id} className="space-y-3">
+          <div className="flex justify-end">
+            <div className="max-w-[82%] rounded-2xl rounded-tr-md bg-primary text-primary-foreground px-4 py-2.5 text-sm shadow-sm">${note.text}</div>
+          </div>
+          <div className="flex items-start gap-2.5">
+            <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5"><${I} name="sparkle" size=${12} className="text-primary"/></div>
+            <div className="max-w-[86%] rounded-2xl rounded-tl-md bg-card border border-border px-4 py-3 shadow-sm">
+              <p className="text-sm font-medium mb-1">I can help with that.</p>
+              <p className="text-xs text-muted-foreground">I can suggest a survey type, refine your questions, or help decide whether responses should be anonymous.</p>
+            </div>
+          </div>
+        </div>`)}
+
+        ${creatorStage==='clarify'?html`<div className="space-y-3">
+          <div className="flex items-start gap-2.5">
+            <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+              <${I} name="sparkle" size=${12} className="text-primary"/>
+            </div>
+            <div className="max-w-[86%] rounded-2xl rounded-tl-md bg-card border border-border px-4 py-3 shadow-sm">
+              <p className="text-sm font-medium mb-1">I can draft this survey. A few choices will make it more useful.</p>
+              <p className="text-xs text-muted-foreground">Complete the cards below, then I will generate a reviewable draft.</p>
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-border bg-background p-3">
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <div>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Response type</p>
+                <p className="text-xs font-semibold mt-1">Should responses be anonymous?</p>
+              </div>
+              ${briefAnswers.anonymous!==null?html`<${I} name="check" size=${14} className="text-primary flex-shrink-0"/>`:null}
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              ${[{label:'Anonymous',value:true},{label:'Identified',value:false}].map(opt=>html`<button key=${opt.label} onClick=${()=>setBriefAnswers(p=>({...p,anonymous:opt.value}))} className=${cn('h-9 rounded-lg border text-xs font-semibold transition-all',briefAnswers.anonymous===opt.value?'border-primary bg-primary/10 text-primary':'border-border bg-card text-muted-foreground hover:text-primary hover:border-primary/40')}>${opt.label}</button>`)}
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-border bg-background p-3">
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <div>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Survey length</p>
+                <p className="text-xs font-semibold mt-1">How long should it be?</p>
+              </div>
+              ${briefAnswers.count?html`<${I} name="check" size=${14} className="text-primary flex-shrink-0"/>`:null}
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              ${[5,8,10].map(count=>html`<button key=${count} onClick=${()=>setBriefAnswers(p=>({...p,count}))} className=${cn('h-9 rounded-lg border text-xs font-semibold transition-all',briefAnswers.count===count?'border-primary bg-primary/10 text-primary':'border-border bg-card text-muted-foreground hover:text-primary hover:border-primary/40')}>${count} Q</button>`)}
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-border bg-background p-3">
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <div>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Focus areas</p>
+                <p className="text-xs font-semibold mt-1">What should Kira focus on?</p>
+              </div>
+              ${briefAnswers.focus.length?html`<${I} name="check" size=${14} className="text-primary flex-shrink-0"/>`:null}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              ${FOCUS_CHOICES.map(focus=>html`<button key=${focus} onClick=${()=>toggleBriefFocus(focus)} className=${cn('h-8 px-3 rounded-full border text-xs font-semibold transition-all',briefAnswers.focus.includes(focus)?'border-primary bg-primary/10 text-primary':'border-border bg-card text-muted-foreground hover:text-primary hover:border-primary/40')}>${focus}</button>`)}
+            </div>
+          </div>
+
+          ${briefSummary?html`<div className="rounded-xl bg-primary/[0.04] border border-primary/10 px-3 py-2 text-xs text-muted-foreground">
+            <span className="font-semibold text-foreground">Kira will generate:</span> ${briefSummary}
+          </div>`:null}
+        </div>`:null}
+
+        ${creatorStage==='generating'?html`<div className="flex items-start gap-2.5">
+          <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+            <span className="animate-spin inline-block w-3.5 h-3.5 border-2 border-primary/25 border-t-primary rounded-full"/>
+          </div>
+          <div className="max-w-[86%] rounded-2xl rounded-tl-md bg-card border border-border px-4 py-3 shadow-sm">
+            <p className="text-sm font-medium mb-1">Generating your survey now.</p>
+            <p className="text-xs text-muted-foreground mb-3">You can keep working. This draft will appear at the top of Recent Surveys while it is being prepared.</p>
+            <div className="space-y-2">
+              ${GEN_STEPS.map((step,i)=>html`<div key=${step} className="flex items-center gap-2 text-xs">
+                <span className=${cn('w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0',i<2?'bg-primary/10 text-primary':'bg-muted text-muted-foreground')}>
+                  ${i<2?html`<${I} name="check" size=${11}/>`:i===2?html`<span className="animate-pulse w-1.5 h-1.5 rounded-full bg-primary"/>`:i+1}
+                </span>
+                <span className=${cn(i<2?'text-foreground':'text-muted-foreground')}>${step}</span>
+              </div>`)}
+            </div>
+          </div>
+        </div>`:null}
+
+        ${creatorStage==='ready'?(()=>{
+          const qCount=briefAnswers.count||selectedQuick?.count||8;
+          const isAnon=briefAnswers.anonymous!==null?briefAnswers.anonymous:(selectedQuick?.anonymous??true);
+          const tCount=selectedQuick?.types?.length||3;
+          return html`<div className="flex items-start gap-2.5">
+          <div className="w-7 h-7 rounded-full bg-emerald-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+            <${I} name="check" size=${13} className="text-emerald-600"/>
+          </div>
+          <div className="max-w-[86%] rounded-2xl rounded-tl-md bg-card border border-emerald-500/20 px-4 py-3 shadow-sm">
+            <p className="text-sm font-medium mb-1.5">Your survey draft is ready.</p>
+            <div className="flex flex-wrap items-center gap-1.5 mb-2 text-[11px] font-medium text-foreground/70">
+              <span className="px-2 py-0.5 rounded-md bg-muted">${qCount} questions</span>
+              <span className="px-2 py-0.5 rounded-md bg-muted">${isAnon?'Anonymous':'Identified'}</span>
+              <span className="px-2 py-0.5 rounded-md bg-muted">${tCount} question types</span>
+            </div>
+            <p className="text-xs text-muted-foreground">Open the editor to review wording, reorder questions, and adjust settings before assigning.</p>
+          </div>
+        </div>`;})():null}
+      </div>
+    </div>
+
+    <div className="border-t border-border px-4 py-3 bg-card">
+      ${creatorStage==='clarify'?html`<${Btn} onClick=${startGeneration} disabled=${!hasClarifyingAnswers} className="w-full">
+        <${I} name="lightning" size=${14}/> Generate with Kira
+      </${Btn}>`:creatorStage==='ready'?html`<${Btn} onClick=${()=>onNav('t-editor')} className="w-full">
+        Review Draft <${I} name="chevron" size=${12} className="-rotate-90"/>
+      </${Btn}>`:creatorStage==='generating'?html`<div className="flex items-center justify-center gap-2 text-xs text-muted-foreground py-2">
+        <span className="animate-spin inline-block w-3.5 h-3.5 border-2 border-primary/25 border-t-primary rounded-full"/>
+        Kira is preparing your draft...
+      </div>`:html`<div className="rounded-2xl border border-border bg-background px-3 py-2">
+        <input value=${kiraInput} onChange=${e=>setKiraInput(e.target.value)} onKeyDown=${e=>{if(e.key==='Enter'){e.preventDefault();sendKiraMessage();}}} placeholder="Ask anything..." className="w-full bg-transparent outline-none text-sm placeholder:text-muted-foreground mb-2"/>
+        <div className="flex items-center justify-between">
+          <button className="text-[11px] text-muted-foreground hover:text-primary transition-colors">Tools</button>
+          <button onClick=${sendKiraMessage} disabled=${!kiraInput.trim()} className=${cn('w-8 h-8 rounded-full flex items-center justify-center transition-all',kiraInput.trim()?'bg-primary text-primary-foreground':'bg-muted text-muted-foreground')}>
+            <${I} name="arrow" size=${13}/>
+          </button>
+        </div>
+      </div>`}
+    </div>
+  </div>
+</div>`:null}
+
+${showToast&&!showKiraPanel?html`<div className="fixed bottom-6 right-6 z-50 fi">
   <div className="bg-[#1a1a2e] text-white rounded-xl shadow-2xl px-4 py-3.5 flex items-start gap-3 min-w-[300px] max-w-sm border border-white/10">
     <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-purple-400 flex items-center justify-center flex-shrink-0 mt-0.5">
       <span className="animate-spin inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full"/>
     </div>
     <div className="flex-1 min-w-0">
       <p className="text-sm font-semibold mb-0.5">Generating your survey…</p>
-      <p className="text-xs text-white/60">AI is writing questions based on your prompt. You'll be taken to the editor shortly.</p>
+      <p className="text-xs text-white/60">Kira is preparing your draft. You can find it at the top of Recent Surveys.</p>
     </div>
   </div>
 </div>`:null}
@@ -3281,7 +3438,7 @@ const filteredSurveys=tab==='active'?activeSurveys:tab==='archived'?archivedSurv
 if(selSurvey){
   const sv=selSurvey;
   const svAssignments=ASSIGNMENTS.filter(a=>a.surveyId===sv.id);
-  const stCfg={active:{label:'Active',variant:'success'},closed:{label:'Archived',variant:'secondary'}};
+  const stCfg={active:{label:'Active',variant:'success'},closed:{label:'Closed',variant:'secondary'},expired:{label:'Expired',variant:'outline'}};
   const isAssigned=sv.assignmentIds.length>0;
   return html`<div className="flex min-h-[calc(100vh)]">
 <${Sidebar} onNav=${onNav} active="t-home"/>
@@ -3318,17 +3475,23 @@ if(selSurvey){
   <div className="mb-8">
     <h2 className="text-base font-semibold mb-3">Actions</h2>
     <div className="grid grid-cols-2 gap-4">
-      <button onClick=${()=>onNav('t-editor')}
-        className="relative flex items-center gap-4 px-5 py-5 bg-card rounded-xl border border-border hover:border-primary/30 hover:shadow-md transition-all text-left group">
-        <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-          <${I} name="edit" size=${17} className="text-primary"/>
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold">Edit Survey</p>
-          <p className="text-xs text-muted-foreground mt-0.5">Modify the survey questions and settings.</p>
-        </div>
-        <${I} name="arrow" size=${14} className="text-muted-foreground/40 group-hover:text-primary group-hover:translate-x-0.5 transition-all flex-shrink-0"/>
-      </button>
+      ${(()=>{
+        const isInProgress=svAssignments.some(a=>a.status==='active'&&a.responses>0);
+        const lockedMsg='Students have already started responding. Editing is locked to keep results comparable across students. Use \u201cCopy as draft\u201d to make changes.';
+        return html`<button onClick=${isInProgress?undefined:()=>onNav('t-editor')}
+          disabled=${isInProgress}
+          title=${isInProgress?lockedMsg:''}
+          className=${cn('relative flex items-center gap-4 px-5 py-5 bg-card rounded-xl border border-border transition-all text-left group',isInProgress?'opacity-60 cursor-not-allowed':'hover:border-primary/30 hover:shadow-md')}>
+          <div className=${cn('w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0',isInProgress?'bg-muted':'bg-primary/10')}>
+            <${I} name=${isInProgress?'shield':'edit'} size=${17} className=${isInProgress?'text-muted-foreground':'text-primary'}/>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold">Edit Survey</p>
+            <p className="text-xs text-muted-foreground mt-0.5">${isInProgress?'Locked \u2014 students have started responding. Use Copy as draft to make changes.':'Modify the survey questions and settings.'}</p>
+          </div>
+          <${I} name="arrow" size=${14} className=${cn('flex-shrink-0 transition-all',isInProgress?'text-muted-foreground/30':'text-muted-foreground/40 group-hover:text-primary group-hover:translate-x-0.5')}/>
+        </button>`;
+      })()}
       <button onClick=${()=>onNav('s-survey')}
         className="relative flex items-center gap-4 px-5 py-5 bg-card rounded-xl border border-border hover:border-primary/30 hover:shadow-md transition-all text-left group">
         <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -3424,7 +3587,7 @@ return html`<div className="flex min-h-[calc(100vh)]">
   <div className="flex items-center justify-between mb-6">
     <h1 className="text-2xl font-bold tracking-tight">My Surveys</h1>
     <div className="flex items-center border border-border rounded-lg overflow-hidden bg-card shadow-sm">
-      ${[{k:'active',l:'Active',n:activeSurveys.length},{k:'archived',l:'Archived',n:archivedSurveys.length},{k:'all',l:'All',n:SURVEYS_LIST.length}].map((t,i)=>html`<button key=${t.k} onClick=${()=>setTab(t.k)}
+      ${[{k:'active',l:'Active',n:activeSurveys.length},{k:'archived',l:'Closed',n:archivedSurveys.length},{k:'all',l:'All',n:SURVEYS_LIST.length}].map((t,i)=>html`<button key=${t.k} onClick=${()=>setTab(t.k)}
         className=${cn('px-4 py-1.5 text-xs font-semibold transition-all',i>0?'border-l border-border':'',tab===t.k?'bg-background text-foreground shadow-inner':'text-muted-foreground hover:text-foreground hover:bg-accent/50')}>
         ${t.l} <span className="ml-1 text-[10px] opacity-60">${t.n}</span>
       </button>`)}
@@ -3438,7 +3601,7 @@ return html`<div className="flex min-h-[calc(100vh)]">
       const totalResponses=svAssignments.reduce((s,a)=>s+a.responses,0);
       const hasActive=sv.assignmentIds.some(id=>ASSIGNMENTS.find(a=>a.id===id&&a.status==='active'));
       const hasAny=sv.assignmentIds.length>0;
-      const statusLbl=hasActive?'Active':hasAny?'Archived':'Not Assigned';
+      const statusLbl=hasActive?'Active':hasAny?'Closed':'Not Assigned';
       const statusCls=hasActive?'bg-emerald-500/10 text-emerald-700':'bg-muted text-muted-foreground/70';
       const statusDot=hasActive?'#22c55e':hasAny?'#9ca3af':'#d1d5db';
       const isArchived=hasAny&&!hasActive;
@@ -3453,7 +3616,7 @@ return html`<div className="flex min-h-[calc(100vh)]">
             <div className="absolute -top-4 -right-4 w-16 h-16 rounded-full opacity-20" style=${{background:sv.coverTo}}/>
             <div className="absolute -bottom-3 -left-3 w-12 h-12 rounded-full opacity-20" style=${{background:sv.coverFrom}}/>
             <span className="text-3xl relative z-10">${sv.coverIcon}</span>
-            ${isArchived?html`<div className="absolute top-2 left-2 bg-black/40 backdrop-blur-sm text-white text-[10px] font-semibold px-2 py-0.5 rounded-md">Archived</div>`:null}
+            ${isArchived?html`<div className="absolute top-2 left-2 bg-black/40 backdrop-blur-sm text-white text-[10px] font-semibold px-2 py-0.5 rounded-md">Closed</div>`:null}
           </div>
           <!-- content -->
           <div className="flex-1 px-4 py-4 flex flex-col min-w-0">
@@ -3805,7 +3968,7 @@ const ATLAS_SURVEYS=[
     {id:1,type:'likert',text:'The instructor explains concepts clearly.',preset:'agreement',points:5},
     {id:2,type:'likert',text:'Course materials are relevant and helpful.',preset:'agreement',points:5},
     {id:3,type:'mc',text:'Preferred feedback method?',options:['Written comments','Video feedback','In-person discussion','Rubric-based']},
-    {id:4,type:'essay',text:'What would you change about this course?'},
+    {id:4,type:'freeresponse',text:'What would you change about this course?'},
   ]},
   {id:'sv-b',title:'TA Evaluation',assignmentId:'a2',date:'Feb 20, 2026',questions:[
     {id:10,type:'likert',text:'The TA explains topics in an approachable way.',preset:'agreement',points:5},
@@ -4191,7 +4354,7 @@ return html`<div className="flex min-h-screen" onClick=${()=>{setClassOpen(false
                 const mcData=MMR[q.id];
                 const isLikert=q.type==='likert';
                 const isMC=q.type==='mc';
-                const isText=q.type==='freeresponse'||q.type==='essay';
+                const isText=q.type==='freeresponse';
                 const opts=getLikertLabels(q);
                 const myIdx=isLikert&&resp?opts.indexOf(resp):-1;
                 return html`<div key=${q.id} className="bg-white rounded-lg border border-border/60 p-4 shadow-sm">
@@ -4299,60 +4462,89 @@ const TFlows=({onNav})=>{
     },
     {
       id:'results',label:'Review Results',color:'#0284c7',
-      desc:'Analyze class responses and drill into individual student data',
-      w:560,h:440,
+      desc:'Review anonymous or identified responses; AI Summary & Respond to Students apply in both modes; derived signals export to Atlas',
+      w:560,h:500,
       nodes:[
-        {id:'n1',x:190,y:20, w:180,h:52,t:'screen',  label:'Assignments',       sub:'Check submission counts',  c:'#0284c7',p:'t-assign',       ic:'send'},
-        {id:'n2',x:190,y:128,w:180,h:52,t:'screen',  label:'Anonymous Results', sub:'Class distribution',      c:'#0e7490',p:'t-results',       ic:'bar'},
-        {id:'na',x:408,y:112,w:138,h:54,t:'note',    label:'AI Summary',        sub:'Per-question insight',    c:'#7c3aed',                     ic:'star'},
-        {id:'n3',x:190,y:244,w:180,h:52,t:'screen',  label:'Identified Results',sub:'Per-student breakdown',   c:'#1d4ed8',p:'t-results-id',   ic:'users'},
-        {id:'n4',x:190,y:358,w:180,h:52,t:'screen',  label:'Student Atlas',     sub:'Full learner profile',    c:'#059669',p:'t-student-atlas', ic:'grad'},
+        {id:'n1',x:190,y:20, w:180,h:52,t:'screen',  label:'Survey Detail',      sub:'Counts, status, actions',  c:'#0284c7',p:'t-survey-detail',ic:'send'},
+        {id:'d1',x:218,y:126,w:124,h:40,t:'decision',label:'Response mode',                                   c:'#b45309'},
+        {id:'n2',x:28, y:220,w:178,h:52,t:'screen',  label:'Anonymous Results', sub:'Aggregate only',          c:'#0e7490',p:'t-results',       ic:'bar'},
+        {id:'n3',x:354,y:220,w:178,h:52,t:'screen',  label:'Identified Results',sub:'Individual drilldown',    c:'#1d4ed8',p:'t-results-id',   ic:'users'},
+        {id:'na',x:190,y:330,w:180,h:54,t:'note',    label:'AI Summary + Respond', sub:'Both modes · teacher-only', c:'#7c3aed',                ic:'star'},
+        {id:'n4',x:190,y:430,w:180,h:52,t:'note',    label:'Atlas Data Export', sub:'Derived signals only',    c:'#059669',                     ic:'grad'},
       ],
       edges:[
-        {f:'n1',t:'n2',dir:'v'},
-        {f:'n2',t:'na',dir:'h'},
-        {f:'n2',t:'n3',dir:'v'},
-        {f:'n3',t:'n4',dir:'v'},
+        {f:'n1',t:'d1',dir:'v'},
+        {f:'d1',t:'n2',dir:'dl',label:'Anonymous'},
+        {f:'d1',t:'n3',dir:'dr',label:'Identified'},
+        {f:'n2',t:'na',dir:'dr'},
+        {f:'n3',t:'na',dir:'dl'},
+        {f:'na',t:'n4',dir:'v'},
       ],
     },
     {
       id:'student',label:'Student Journey',color:'#d97706',
-      desc:'Student receives a survey, completes it, and views their results',
-      w:560,h:540,
+      desc:'Student reviews privacy, answers or skips questions, and sees completion plus teacher response',
+      w:560,h:620,
       nodes:[
-        {id:'n1',x:190,y:20, w:180,h:52,t:'screen',   label:'Student Home',  sub:'Todo & completed',           c:'#d97706',p:'s-home-v2', ic:'home'},
-        {id:'n2',x:190,y:128,w:180,h:52,t:'screen',   label:'Take Survey',   sub:'Answer all questions',       c:'#dc2626',p:'s-survey',  ic:'clip'},
-        {id:'n3',x:190,y:240,w:180,h:52,t:'screen',   label:'Submit',        sub:'Confirm responses',          c:'#059669',p:'s-survey',  ic:'check'},
-        {id:'d1',x:218,y:336,w:124,h:40,t:'decision', label:'Results visible?',                                c:'#b45309'},
-        {id:'n4',x:50, y:428,w:178,h:52,t:'screen',   label:'Class Results', sub:'My answers + distribution',  c:'#059669',p:'s-results', ic:'bar'},
-        {id:'n5',x:332,y:428,w:178,h:52,t:'screen',   label:'My Answers',    sub:'Results not shared yet',     c:'#94a3b8',p:'s-results', ic:'check'},
+        {id:'n1',x:190,y:20, w:180,h:52,t:'screen',   label:'Student Home',      sub:'Todo & completed',        c:'#d97706',p:'s-home-v2', ic:'home'},
+        {id:'n2',x:190,y:120,w:180,h:52,t:'screen',   label:'Intro / Privacy',   sub:'Mode, due date, skip rule',c:'#d97706',p:'s-survey',  ic:'clip'},
+        {id:'n3',x:190,y:220,w:180,h:52,t:'screen',   label:'Take Survey',       sub:'Answer, skip, mark review',c:'#dc2626',p:'s-survey',  ic:'edit'},
+        {id:'n4',x:190,y:320,w:180,h:52,t:'screen',   label:'Skip & Submit',     sub:'Confirm skipped questions',c:'#059669',p:'s-survey',  ic:'check'},
+        {id:'n5',x:190,y:420,w:180,h:52,t:'screen',   label:'Completion',        sub:'Answered X/Y, Skipped N',  c:'#059669',p:'s-results', ic:'check'},
+        {id:'na',x:408,y:432,w:138,h:54,t:'note',     label:'Instructor Response',sub:'If teacher sends one',    c:'#7c3aed',               ic:'bell'},
+        {id:'nb',x:190,y:540,w:180,h:52,t:'note',     label:'Teacher-only Results',sub:'No peer comparison in V1',c:'#94a3b8',               ic:'bar'},
       ],
       edges:[
         {f:'n1',t:'n2',dir:'v'},
         {f:'n2',t:'n3',dir:'v'},
-        {f:'n3',t:'d1',dir:'v'},
-        {f:'d1',t:'n4',dir:'dl',label:'Yes  ≥5 responses'},
-        {f:'d1',t:'n5',dir:'dr',label:'No'},
+        {f:'n3',t:'n4',dir:'v'},
+        {f:'n4',t:'n5',dir:'v'},
+        {f:'n5',t:'na',dir:'h'},
+        {f:'n5',t:'nb',dir:'v'},
       ],
     },
     {
       id:'ai',label:'AI Generation',color:'#6d28d9',
-      desc:'Generate a custom survey from a description using AI assistance',
-      w:560,h:540,
+      desc:'Kira clarifies missing survey details in a right panel, then creates an editable draft',
+      w:560,h:620,
       nodes:[
-        {id:'n1',x:190,y:20, w:180,h:52,t:'screen',   label:'Create Page',    sub:'Open survey creator',       c:'#7c3aed',p:'t-create', ic:'plus'},
-        {id:'n2',x:190,y:128,w:180,h:52,t:'screen',   label:'Describe Survey',sub:'Topic, audience, tone',     c:'#7c3aed',p:'t-create', ic:'edit'},
-        {id:'n3',x:190,y:240,w:180,h:52,t:'screen',   label:'AI Generates',   sub:'Questions drafted instantly',c:'#6d28d9',p:'t-create', ic:'star'},
-        {id:'d1',x:218,y:336,w:124,h:40,t:'decision', label:'Satisfied?',                                     c:'#b45309'},
-        {id:'n4',x:50, y:428,w:178,h:52,t:'screen',   label:'Survey Editor',  sub:'Review & fine-tune',        c:'#059669',p:'t-editor', ic:'edit'},
-        {id:'n5',x:332,y:428,w:178,h:52,t:'screen',   label:'Refine Prompt',  sub:'Adjust & regenerate',       c:'#d97706',p:'t-create', ic:'trend'},
+        {id:'n1',x:190,y:20, w:180,h:52,t:'screen',   label:'Create Page',       sub:'Open survey creator',       c:'#7c3aed',p:'t-create', ic:'plus'},
+        {id:'n2',x:190,y:120,w:180,h:52,t:'screen',   label:'Describe Survey',   sub:'Prompt or starter',         c:'#7c3aed',p:'t-create', ic:'edit'},
+        {id:'n3',x:190,y:220,w:180,h:52,t:'screen',   label:'Kira Right Panel',  sub:'Clarifies missing info',    c:'#6d28d9',p:'t-create', ic:'star'},
+        {id:'na',x:408,y:234,w:138,h:54,t:'note',     label:'Choice Cards',      sub:'Mode, count, focus',        c:'#7c3aed',               ic:'clip'},
+        {id:'n4',x:190,y:330,w:180,h:52,t:'screen',   label:'Generating Task',   sub:'Recent Surveys loading',    c:'#0284c7',p:'t-create', ic:'trend'},
+        {id:'n5',x:190,y:440,w:180,h:52,t:'screen',   label:'Ready Draft',       sub:'Review before assign',      c:'#059669',p:'t-editor', ic:'check'},
+        {id:'n6',x:190,y:548,w:180,h:52,t:'screen',   label:'Survey Editor',     sub:'Teacher final review',      c:'#059669',p:'t-editor', ic:'edit'},
       ],
       edges:[
         {f:'n1',t:'n2',dir:'v'},
         {f:'n2',t:'n3',dir:'v'},
-        {f:'n3',t:'d1',dir:'v'},
-        {f:'d1',t:'n4',dir:'dl',label:'Yes'},
-        {f:'d1',t:'n5',dir:'dr',label:'No'},
+        {f:'n3',t:'na',dir:'h'},
+        {f:'n3',t:'n4',dir:'v'},
+        {f:'n4',t:'n5',dir:'v'},
+        {f:'n5',t:'n6',dir:'v'},
+      ],
+    },
+    {
+      id:'atlas',label:'Atlas Data Contract',color:'#059669',
+      desc:'Survey responses become aggregate or per-student signals in Student Atlas; raw short answers never leave Survey',
+      w:620,h:560,
+      nodes:[
+        {id:'n1',x:30, y:20, w:180,h:52,t:'screen',   label:'Student Submits',    sub:'Response mode decides path',c:'#0284c7',p:'s-results',ic:'send'},
+        {id:'n6',x:410,y:20, w:180,h:52,t:'screen',   label:'Teacher Sends IR',   sub:'Per assignment',            c:'#7c3aed',p:'t-results',ic:'bell'},
+        {id:'d1',x:60, y:128,w:120,h:40,t:'decision', label:'Response mode',                                       c:'#b45309'},
+        {id:'n2',x:20, y:228,w:178,h:54,t:'note',     label:'Aggregate Distribution', sub:'Per-question · daily batch',  c:'#0e7490',ic:'bar'},
+        {id:'n4',x:220,y:228,w:178,h:54,t:'note',     label:'Individual Signals',   sub:'Per-student labels · realtime', c:'#1d4ed8',ic:'users'},
+        {id:'n5',x:420,y:228,w:178,h:54,t:'note',     label:'IR Boolean',           sub:'response_sent + sent_at · on send', c:'#7c3aed',ic:'check'},
+        {id:'n3',x:20, y:328,w:178,h:54,t:'note',     label:'Class Signals',        sub:'Confidence · workload · pacing · climate · daily', c:'#0e7490',ic:'trend'},
+        {id:'nb',x:170,y:448,w:280,h:54,t:'note',     label:'Raw short_answer NOT exported', sub:'Stays in Survey · privacy boundary', c:'#dc2626',ic:'clip'},
+      ],
+      edges:[
+        {f:'n1',t:'d1',dir:'v'},
+        {f:'d1',t:'n2',dir:'dl',label:'Anonymous'},
+        {f:'d1',t:'n4',dir:'dr',label:'Identified'},
+        {f:'n6',t:'n5',dir:'v'},
+        {f:'n2',t:'n3',dir:'v'},
       ],
     },
   ];
@@ -4568,7 +4760,7 @@ return html`<div className="min-h-screen">
   ${page==='t-editor'?html`<${TEditor} onNav=${onNav}/>`:null}
   ${page==='t-assign'?html`<${TAssignments} onNav=${onNav} onViewResults=${onViewResults} initialSurvey=${assignCtx}/>`:null}
   ${page==='t-results'?html`<${TResults} onNav=${onNav} resultsCtx=${resultsCtx} onSendResponse=${onSendResponse}/>`:null}
-  ${page==='t-results-id'?html`<${TResultsId} onNav=${onNav} resultsCtx=${resultsCtx}/>`:null}
+  ${page==='t-results-id'?html`<${TResultsId} onNav=${onNav} resultsCtx=${resultsCtx} onSendResponse=${onSendResponse}/>`:null}
   ${page==='t-student-atlas'?html`<${TStudentAtlas} onNav=${onNav} initialStudent=${atlasCtx}/>`:null}
   ${page==='t-flows'?html`<${TFlows} onNav=${onNav}/>`:null}
   ${page==='s-home-v2'?html`<${SHomeV2} onNav=${onNav} onTakeSurvey=${onTakeSurvey}/>`:null}
